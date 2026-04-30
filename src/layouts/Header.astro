@@ -1,0 +1,40 @@
+---
+import SolidButton from "../components/SolidButton.astro"
+import FrostedButton from "../components/FrostedButton.astro"
+
+const currItem = Astro.url.pathname;
+const navItems = [
+    { name: "Home", path: "/" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contact" },
+    { name: "Services", path: "/services" },
+    { name: "Blog", path: "/blog" },
+]
+---
+
+<header class="">
+    <nav class="flex items-center w-[92%] mx-auto">
+        <div class="flex-1"><img src="../src/media/logo.png" alt="Capital Joven" class="w-20"></div>
+        <ul class="flex  items-center justify-center gap-11 border rounded-full px-2 py-2 bg-zinc-900/50 backdrop-blur-md border-white/5 font-medium">
+            {navItems.map((item) => {
+                const active = currItem === item.path || currItem === item.path + '/';
+                return(
+                    <li>
+                        <a href={item.path} class={`px-4 py-1.5 rouded full transition-all duration-300 ease-in-out 
+                            ${active ? 
+                            'bg-emerald-500 text-black shadow-[0_0_10px_rgba(16,185,129,0.5)] rounded-full' 
+                            : 'text-white hover:text-emerald-400'
+                        }`}>
+                            {item.name}
+                        </a>
+                    </li>
+                )
+            })}
+        </ul>
+        <div class="flex flex-1 justify-end items-center gap-10">
+            <FrostedButton text="Regístrate" />
+            <SolidButton text="Iniciar Sesión" />
+        </div>
+        
+    </nav>
+</header>
