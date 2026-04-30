@@ -1,0 +1,37 @@
+<!-- Contenedor principal con fondo oscuro para contrastar con la tarjeta -->
+<section class="relative w-full pt-24 bg-black overflow-hidden">
+    
+    <!-- Resplandor de fondo (Aura Cyan/Morado) asomándose por detrás del borde curvo -->
+    <div class="absolute top-10 inset-x-0 mx-auto max-w-4xl h-32 bg-linear-to-r from-cyan-500 via-purple-500 to-emerald-500 opacity-50 blur-[80px]"></div>
+
+    <!-- Tarjeta principal blanca con bordes súper redondeados -->
+    <div class="relative z-10 w-full bg-white rounded-t-[3rem] px-6 py-24 md:py-32 flex flex-col items-center text-center shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
+
+        <!-- Etiqueta (Badge) superior -->
+        <div class="inline-flex items-center justify-center gap-2 px-5 py-2 mb-12 rounded-full border border-gray-200 text-gray-500 font-medium text-sm bg-gray-50/50 backdrop-blur-sm">
+            <!-- Ícono SVG (Puedes cambiarlo por el de tu logo) -->
+            <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <span>Acerca de Capital Joven</span>
+        </div>
+
+        <!-- Texto Tipográfico Gigante -->
+        <h2 class="max-w-6xl mx-auto text-3xl md:text-5xl lg:text-6xl font-medium leading-[1.3] md:leading-[1.3] tracking-tight">
+            
+            <!-- 1. Parte difuminada con degradado sutil e itálica -->
+            <span class="text-transparent bg-clip-text bg-linear-to-br from-indigo-300 via-purple-400 to-slate-400">
+                <span class="italic">Creemos que el futuro de la gestión financiera es digital,</span> transparente y enfocado en el estudiante. 
+            </span>
+
+            <!-- 2. Parte resaltada en texto oscuro para llamar la atención -->
+            <span class="text-slate-900">
+                Nuestra plataforma empodera a los universitarios
+            </span>
+            <!-- 3. Resto del texto difuminado -->
+            <span class="text-transparent bg-clip-text bg-linear-to-br from-slate-400 via-purple-400 to-cyan-300">
+                para transformar sus finanzas diarias en experiencias intuitivas, mejorando la confianza y el control en cada nivel.
+            </span>
+        </h2>
+    </div>
+</section>
