@@ -15,7 +15,7 @@ const navItems = [
 <header class="">
     <nav class="flex items-center w-[92%] mx-auto">
         <div class="flex-1"><img src="../src/media/logo.png" alt="Capital Joven" class="w-20"></div>
-        <ul class="flex  items-center justify-center gap-11 border rounded-full px-2 py-2 bg-zinc-900/50 backdrop-blur-md border-white/5 font-medium">
+        <ul class="flex  items-center justify-center gap-11 border rounded-full px-1.5 py-2 bg-zinc-900/30 backdrop-blur-md border-white/3 font-medium">
             {navItems.map((item) => {
                 const active = currItem === item.path || currItem === item.path + '/';
                 return(
@@ -35,6 +35,5 @@ const navItems = [
             <FrostedButton text="Regístrate" />
             <SolidButton text="Iniciar Sesión" />
         </div>
-        
     </nav>
 </header>
