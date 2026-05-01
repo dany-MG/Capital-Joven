@@ -12,7 +12,7 @@ const navItems = [
 ]
 ---
 
-<header class="flex ">
+<header class="fixed top-0 w-svw p-2 z-10">
     <nav class="flex items-center w-[92%] mx-auto">
         <div class="flex-1"><img src="../src/media/logo.png" alt="Capital Joven" class="w-20"></div>
         <ul class="flex  items-center justify-center gap-11 border rounded-full px-1.5 py-2 bg-zinc-900/30 backdrop-blur-md border-white/3 font-medium">
@@ -20,9 +20,9 @@ const navItems = [
                 const active = currItem === item.path || currItem === item.path + '/';
                 return(
                     <li>
-                        <a href={item.path} class={`px-4 py-1.5 rouded full transition-all duration-300 ease-in-out 
+                        <a href={item.path} class={`nav-link px-4 py-1.5 rounded-full transition-all duration-300 ease-in-out 
                             ${active ? 
-                            'bg-emerald-500 text-black shadow-[0_0_10px_rgba(16,185,129,0.5)] rounded-full' 
+                            'bg-emerald-500 text-black shadow-[0_0_10px_rgba(16,185,129,0.5)]' 
                             : 'text-white hover:text-emerald-400'
                         }`}>
                             {item.name}
@@ -37,3 +37,21 @@ const navItems = [
         </div>
     </nav>
 </header>
+
+<script>
+import { navigate } from "astro:transitions/client";
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const navlinks = document.querySelectorAll('.nav-link');
+        navlinks.forEach(link => {
+            link.addEventListener('click', function(){
+                navlinks.forEach(l => {
+                    l.classList.remove('bg-emerald-500', 'text-black', 'shadow-[0_0_10px_rgba(16,185,129,0.5)]');
+                    l.classList.add('text-white', 'hover:text-emerald-400');
+                });
+                this.classList.remove('text-white', 'hover:text-emerald-400');
+                this.classList.add('bg-emerald-500', 'text-black', 'shadow-[0_0_10px_rgba(16,185,129,0.5)]');
+            });
+        });
+    });
+</script>

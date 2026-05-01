@@ -157,8 +157,11 @@
 
 :root{
     font-family: 'Satoshi-Regular';
-    margin: 1%;
     box-sizing: border-box;
     color: white;
+}
+
+html, body {
+    overflow-x: hidden;
 }
 

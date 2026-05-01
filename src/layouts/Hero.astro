@@ -1,0 +1,66 @@
+---
+---
+<section class="relative w-full h-svh flex items-center bg-black overflow-hidden">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-40 items-center w-full relative">
+    
+    <!-- Columna Izquierda: Textos y CTAs -->
+    <div class="flex flex-col items-start gap-6 hero-text">
+
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
+        Toma el control con <br />
+        <span class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">Capital Joven</span>
+      </h1>
+
+      <p class="text-gray-400 text-lg md:text-xl max-w-lg leading-relaxed">
+        Gestiona tus gastos, planifica tus metas y domina tu economía universitaria sin complicaciones.
+      </p>
+      
+      <div class="flex flex-wrap gap-4 mt-4">
+         <button class="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium transition-all hover:scale-105">
+            Empezar ahora
+         </button>
+         <button class="px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full font-medium backdrop-blur-md transition-all hover:scale-105">
+            Conocer más
+         </button>
+      </div>
+    </div>
+
+    <!-- Columna Derecha: El Canvas 3D de Spline -->
+    <div class="w-2xl h-100 lg:h-150 flex justify-center items-center relative hero-3d">
+        <!-- Aura verde detrás de las monedas para mayor profundidad -->
+        <div class="absolute inset-0 bg-emerald-500/20 blur-[120px] rounded-full transform scale-75"></div>
+        <spline-viewer class="top-0 -z-10" url="https://prod.spline.design/O-z-WYaxyTSooLyH/scene.splinecode"></spline-viewer>
+    </div>
+
+  </div>
+</section>
+
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.90/build/spline-viewer.js"></script>
+<script>
+  import { gsap } from 'gsap';
+  
+  // Animación de entrada suave al cargar la página
+  document.addEventListener("DOMContentLoaded", () => {
+      const tl = gsap.timeline();
+      
+      // Anima los textos subiendo suavemente
+      tl.from(".hero-text > *", {
+        y: 40,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.15,
+        ease: "power3.out",
+        delay: 0.2
+      })
+      // Aparece el render 3D
+      .from(".hero-3d", {
+        opacity: 0,
+        scale: 0.95,
+        duration: 1.5,
+        ease: "power2.out"
+      }, "-=0.8");
+  });
+</script>
+
+
+
