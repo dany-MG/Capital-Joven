@@ -20,20 +20,26 @@ import HorizontalScroll from "./HorizontalScroll.astro";
 		</script>
 	</head>
 	<body class="bg-black">
-		<Header/>
-		<Hero/>
-		<About/>
-		<HorizontalScroll/>
-
 		<div id="preloader" class="fixed inset-0 z-100 bg-black flex flex-col items-center justify-center">
 			<div class="relative w-16 h-16 flex items-center justify-center">
 				<span class="absolute w-9 h-9 rounded-full border-2 border-green-300 animate-ping [animation-delay:-0.9s] opacity-100"></span>
+			</div>
+		</div>
+		<Header/>
+		<div id="smooth-wrapper">
+			<div id="smooth-content">
+				<Hero/>
+				<About/>
+				<HorizontalScroll/>
 			</div>
 		</div>
 	</body>
 </html>
 <script>
 	import {gsap} from 'gsap';
+	import { ScrollSmoother } from 'gsap/all';
+
+	gsap.registerPlugin(ScrollSmoother);
 
 	window.addEventListener('load', () =>{ 
 		const preloader = document.getElementById('preloader');
@@ -50,5 +56,11 @@ import HorizontalScroll from "./HorizontalScroll.astro";
 			});
 		}
 	});
-	
+
+	ScrollSmoother.create({
+        wrapper: '#smooth-wrapper',
+        content: '#smooth-content',
+		smooth: 2, 
+        effects: true,
+	});
 </script>
