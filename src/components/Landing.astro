@@ -13,12 +13,44 @@ import HorizontalScroll from "./HorizontalScroll.astro";
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Capital Joven</title>
+		<script is:inline>
+			if ('scrollRestoration' in history) {
+				history.scrollRestoration = 'manual';
+			}
+			// Ejecuta esto antes de que la página siquiera se pinte en pantalla
+			window.scrollTo(0, 0);
+		</script>
 	</head>
 	<body class="bg-black">
 		<Header/>
 		<Hero/>
 		<About/>
-		<Footer/>
 		<HorizontalScroll/>
+
+		<div id="preloader" class="fixed inset-0 z-100 bg-black flex flex-col items-center justify-center">
+			<div class="relative w-16 h-16 flex items-center justify-center">
+				<span class="absolute w-9 h-9 rounded-full border-2 border-green-300 animate-ping [animation-delay:-0.9s] opacity-100"></span>
+			</div>
+		</div>
 	</body>
 </html>
+<script>
+	import {gsap} from 'gsap';
+
+	window.addEventListener('load', () =>{ 
+		const preloader = document.getElementById('preloader');
+		if(preloader){
+			gsap.to(preloader, {
+				opacity: 0,
+                duration: 0.8,
+                delay: 0.5,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    // Una vez que es invisible, lo eliminamos del código para que no bloquee los clics
+                    preloader.remove();
+                }
+			});
+		}
+	});
+	
+</script>

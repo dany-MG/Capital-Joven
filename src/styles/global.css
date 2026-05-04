@@ -155,6 +155,15 @@
   --font-sans: 'Satoshi-Variable', sans-serif;
 }
 
+@keyframes draw {
+  0% {
+    stroke-dashoffset: 4500;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
 :root{
     font-family: 'Satoshi-Regular';
     box-sizing: border-box;

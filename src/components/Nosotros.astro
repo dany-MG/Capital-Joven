@@ -1,13 +1,126 @@
 ---
+import FrostedButton from "../elements/FrostedButton.astro"
+import Footer from "../components/Footer.astro"
 ---
 
-<section class="w-full min-h-svh bg-black grid place-items-center relative border-t border-white/10">
-    <div class="max-w-4xl text-center px-6">
-        <h2 class="text-9xl font-[Satoshi-Bold] text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 mb-6">
-            Rompe con la estadística
-        </h2>
-        <p class="text-gray-400 text-xl">
+<section class="container-div w-svw min-h-svh flex items-center justify-center relative overflow-hidden bg-black">
+    
+    <div class="max-w-4xl text-center px-6 relative z-10 flex flex-col items-center justify-center zoom-wrapper">
+        <div class="relative inline-block w-full zoom-text mb-6 cursor-default" id="hover-reveal">
+            <h2 class="text-7xl md:text-9xl font-[Satoshi-Bold] leading-tight m-0 outline-text">
+                Rompe con la <br> estadística
+            </h2>
+            <h2 class="absolute top-0 left-0 w-full text-7xl md:text-9xl font-[Satoshi-Bold] leading-tight text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 m-0 reveal-text pointer-events-none select-none">
+                Rompe con la <br> estadística
+            </h2>
+        </div>
+        <p class="description-text text-gray-400 text-xl">
             No tienes que ser parte de ese porcentaje. Toma el control de tu dinero desde hoy y construye una vida universitaria libre de estrés financiero.
         </p>
     </div>
+
+    <!-- Render 3D Spline -->
+    <div class="final-reveal absolute inset-0 w-full h-full z-20 flex grid-col items-center justify-center opacity-0 pointer-events-none">
+        <div class="grid grid-cols-1 md:grid-cols-2 max-w-7xl w-full px-6 items-center">
+            
+            <div class="reveal-message flex flex-col items-start text-left">
+                <h3 class="text-6xl md:text-7xl font-[Satoshi-Bold] text-white mb-3">
+                    Capital Joven
+                </h3>
+                <p class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 text-2xl md:text-3xl font-medium tracking-tight mb-8">
+                    Que tu dinero no se gradúe antes que tú.
+                </p>
+                <FrostedButton text="Comienza Ya" href="/login"/>
+            </div>
+            
+            <div class="w-220 h-125 md:h-175 relative flex items-center justify-center">
+                <spline-viewer url="https://prod.spline.design/daY0ioaGjr4RloNo/scene.splinecode"></spline-viewer>
+            </div>
+        </div>
+        <Footer/>
+    </div>
 </section>
+
+<!-- ESTILOS PARA EL BORDE DEGRADADO Y LA MÁSCARA -->
+<style>
+    /* Capa Base: Creamos el borde usando los colores esmeralda y cyan de Tailwind */
+    .outline-text {
+        background: linear-gradient(to right, #34d399, #22d3ee);
+        -webkit-background-clip: text;
+        -webkit-text-stroke: 5px transparent;
+        color: black; /* Relleno negro para camuflarse con el fondo */
+    }
+
+    /* Capa Superior: Preparamos la máscara circular cerrada (0px) */
+    .reveal-text {
+        clip-path: circle(0px at 50% 50%);
+        -webkit-clip-path: circle(0px at 50% 50%);
+        -webkit-text-stroke: 2px transparent;
+    }
+</style>
+
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.90/build/spline-viewer.js"></script>
+
+<script>
+    import { gsap } from 'gsap';
+    import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const hoverArea = document.getElementById('hover-reveal');
+        const revealText = hoverArea.querySelector('.reveal-text');
+        if (hoverArea && revealText) {
+            hoverArea.addEventListener('mousemove', (e) => {
+                const rect = hoverArea.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                revealText.style.transition = 'none';
+                revealText.style.clipPath = `circle(120px at ${x}px ${y}px)`;
+                revealText.style.webkitClipPath = `circle(120px at ${x}px ${y}px)`;
+            });
+
+            hoverArea.addEventListener('mouseleave', () => {
+                revealText.style.transition = 'clip-path 0.3s ease-out, -webkit-clip-path 0.3s ease-out';
+                revealText.style.clipPath = 'circle(0px at 50% 50%)';
+                revealText.style.webkitClipPath = 'circle(0px at 50% 50%)';
+            });
+        }
+
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: ".container-div", 
+                start: "top top",
+                pin: true,                 
+                scrub: 1,                  
+                end: "+=2500",
+            }
+        });
+
+        tl.to(".description-text", { 
+            opacity: 0, 
+            duration: 0.1 
+        })
+        
+        .to(".zoom-text", {
+            scale: 150, 
+            transformOrigin: "50% 26%",
+            ease: "power2.in",             
+            duration: 1
+        }, "<")
+
+        .to(".final-reveal", {
+            opacity: 1,
+            duration: 0.4,
+            pointerEvents: "auto",
+            background : "rgba(0,0,0,1)",
+        }, "-=0.2") 
+
+        .to(".reveal-message", {
+            y: 0,
+            duration: 0.4,
+            ease: "back.out(1.5)"
+        }, "<"); 
+    });
+</script>
