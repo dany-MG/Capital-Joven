@@ -2,7 +2,6 @@
 import Header from "./Header.astro";
 import Hero from "./Hero.astro";
 import About from "./About.astro";
-import Footer from "./Footer.astro";
 import HorizontalScroll from "./HorizontalScroll.astro";
 ---
 
@@ -17,7 +16,6 @@ import HorizontalScroll from "./HorizontalScroll.astro";
 			if ('scrollRestoration' in history) {
 				history.scrollRestoration = 'manual';
 			}
-			// Ejecuta esto antes de que la página siquiera se pinte en pantalla
 			window.scrollTo(0, 0);
 		</script>
 	</head>
