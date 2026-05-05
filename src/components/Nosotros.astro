@@ -20,10 +20,13 @@ import Footer from "../components/Footer.astro"
     </div>
 
     <!-- Render 3D Spline -->
-    <div class="final-reveal absolute inset-0 w-full h-full z-20 flex grid-col items-center justify-center opacity-0 pointer-events-none">
-        <div class="grid grid-cols-1 md:grid-cols-2 max-w-7xl w-full px-6 items-center">
+    <div class="final-reveal absolute inset-0 w-full h-full z-20 flex flex-col items-center justify-center opacity-0 pointer-events-none">
+        
+        <!-- 1. Añadimos gap-12 para separar en móvil, y quitamos el gap en escritorio -->
+        <div class="grid grid-cols-1 md:grid-cols-2 max-w-7xl w-full px-6 items-center gap-12 md:gap-0 mt-20 md:mt-0">
             
-            <div class="reveal-message flex flex-col items-start text-left">
+            <!-- 2. Centramos todo en móvil, lo alineamos a la izquierda en 'md' -->
+            <div class="reveal-message flex flex-col items-center text-center md:items-start md:text-left z-10 w-full">
                 <h3 class="text-6xl md:text-7xl font-[Satoshi-Bold] text-white mb-3">
                     Capital Joven
                 </h3>
@@ -33,11 +36,17 @@ import Footer from "../components/Footer.astro"
                 <FrostedButton text="Comienza Ya" href="/login"/>
             </div>
             
-            <div class="w-220 h-125 md:h-175 relative flex items-center justify-center">
-                <spline-viewer url="https://prod.spline.design/daY0ioaGjr4RloNo/scene.splinecode"></spline-viewer>
+            <!-- 3. Hacemos el contenedor 3D líquido (w-full) con alturas escalables -->
+            <div class="w-full h-137.5 md:h-275 lg:h-350 relative flex items-center justify-center">
+                <spline-viewer class="w-full h-full" url="https://prod.spline.design/daY0ioaGjr4RloNo/scene.splinecode"></spline-viewer>
             </div>
+            
         </div>
-        <Footer/>
+        
+        <!-- Envolvemos el Footer para que siempre quede hasta abajo de esta pantalla final -->
+        <div class="absolute bottom-0 w-full">
+            <Footer/>
+        </div>
     </div>
 </section>
 
