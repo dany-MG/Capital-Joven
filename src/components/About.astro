@@ -1,24 +1,26 @@
 ---
 ---
 
-<!-- Contenedor principal con fondo oscuro para contrastar con la tarjeta -->
-<section id="about" class="relative w-full h-svh pt-24 bg-black overflow-hidden flex flex-col">
+<!-- Contenedor principal: Cambiamos h-svh por min-h-svh y ajustamos el padding top en móvil -->
+<section id="about" class="relative w-full min-h-svh pt-16 md:pt-24 bg-black overflow-hidden flex flex-col">
     
     <!-- Resplandor de fondo -->
     <div class="absolute top-10 inset-x-0 mx-auto max-w-4xl h-32 bg-linear-to-r from-blue-700 via-teal-400 to-lime-200 opacity-80 blur-[80px]"></div>
 
-    <div class="relative w-full grow bg-white rounded-t-[3rem] px-6 py-24 md:py-32 flex flex-col items-center text-center ">
+    <!-- Contenedor blanco: Reducimos py-24 a py-12 para móvil, y mantenemos el espaciado grande para escritorio -->
+    <div class="relative w-full grow bg-white rounded-t-[3rem] px-6 py-12 sm:py-16 md:py-32 flex flex-col items-center text-center justify-center">
 
-        <div class="inline-flex items-center justify-center gap-2 px-5 py-2 mb-12 rounded-full border border-gray-200 text-gray-500 font-medium text-sm bg-gray-50/50 backdrop-blur-sm">
+        <div class="inline-flex items-center justify-center gap-2 px-5 py-2 mb-8 md:mb-12 rounded-full border border-gray-200 text-gray-500 font-medium text-sm bg-gray-50/50 backdrop-blur-sm">
             <svg class="w-4 h-4 text-teal-500" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
             <span>Acerca de Capital Joven</span>
         </div>
 
+        <!-- Título: Suavizamos el tamaño inicial a text-2xl/2.5xl para móvil y mejoramos el leading -->
         <p data-bg-color="#9ca3af" 
             data-fg-color="transparent"
-            class="about-title max-w-6xl mx-auto text-3xl md:text-5xl lg:text-6xl font-medium leading-[1.3] md:leading-[1.3] text-transparent tracking-tight bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">
+            class="about-title max-w-6xl mx-auto text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-medium leading-[1.4] md:leading-[1.3] text-transparent tracking-tight bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">
             Creemos que el futuro de la gestión financiera es digital, transparente y enfocado en el estudiante. 
             Nuestra plataforma ayuda a los universitarios a transformar sus finanzas diarias en experiencias intuitivas, mejorando la confianza y el control en su vida financiera.
         </p>

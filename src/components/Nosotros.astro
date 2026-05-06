@@ -7,14 +7,14 @@ import Footer from "../components/Footer.astro"
     
     <div class="max-w-4xl text-center px-6 relative z-10 flex flex-col items-center justify-center zoom-wrapper">
         <div class="relative inline-block w-full zoom-text mb-6 cursor-default" id="hover-reveal">
-            <h2 class="text-7xl md:text-9xl font-[Satoshi-Bold] leading-tight m-0 outline-text">
+            <h2 class="text-6xl md:text-9xl font-[Satoshi-Bold] leading-tight m-0 outline-text">
                 Rompe con la <br> estadística
             </h2>
-            <h2 class="absolute top-0 left-0 w-full text-7xl md:text-9xl font-[Satoshi-Bold] leading-tight text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 m-0 reveal-text pointer-events-none select-none">
+            <h2 class="absolute top-0 left-0 w-full text-6xl md:text-9xl font-[Satoshi-Bold] leading-tight text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 m-0 reveal-text pointer-events-none select-none">
                 Rompe con la <br> estadística
             </h2>
         </div>
-        <p class="description-text text-gray-400 text-xl">
+        <p class="description-text text-gray-400 text-xl w-full md:w-3/4">
             No tienes que ser parte de ese porcentaje. Toma el control de tu dinero desde hoy y construye una vida universitaria libre de estrés financiero.
         </p>
     </div>
@@ -26,15 +26,35 @@ import Footer from "../components/Footer.astro"
         <div class="grid grid-cols-1 md:grid-cols-2 max-w-7xl w-full px-6 items-center gap-12 md:gap-0 mt-20 md:mt-0">
             
             <!-- 2. Centramos todo en móvil, lo alineamos a la izquierda en 'md' -->
-            <div class="reveal-message flex flex-col items-center text-center md:items-start md:text-left z-10 w-full">
-                <h3 class="text-6xl md:text-7xl font-[Satoshi-Bold] text-white mb-3">
+            <!-- Render 3D Spline -->
+    <div class="final-reveal absolute inset-0 w-full h-full z-20 flex flex-col opacity-0 pointer-events-none bg-black">
+        
+        <!-- Contenedor central responsivo usando flex-1 para absorber el espacio disponible -->
+        <div class="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 md:gap-12 pt-16 md:pt-0">
+            
+            <!-- Mensaje -->
+            <div class="reveal-message flex flex-col items-center text-center md:items-start md:text-left z-10 w-full md:w-1/2 shrink-0">
+                <h3 class="text-5xl sm:text-6xl md:text-7xl font-[Satoshi-Bold] text-white mb-2">
                     Capital Joven
                 </h3>
-                <p class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 text-2xl md:text-3xl font-medium tracking-tight mb-8">
+                <p class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 text-xl sm:text-2xl md:text-3xl font-medium tracking-tight mb-6 md:mb-8">
                     Que tu dinero no se gradúe antes que tú.
                 </p>
                 <FrostedButton text="Comienza Ya" href="/login"/>
             </div>
+            
+            <!-- Contenedor 3D: Se adapta dinámicamente al alto en móvil (max-h-[40vh]) y recupera su tamaño en escritorio -->
+            <div class="w-full md:w-1/2 h-11/12 min-h-3/4 max-h-11/12 md:max-h-none md:h-250 lg:h-200 relative flex items-center justify-center">
+                <spline-viewer class="w-full h-full" url="https://prod.spline.design/daY0ioaGjr4RloNo/scene.splinecode"></spline-viewer>
+            </div>
+            
+        </div>
+        
+        <!-- Footer integrado naturalmente al flujo de la columna -->
+        <div class="w-full shrink-0 z-30 relative">
+            <Footer/>
+        </div>
+    </div>
             
             <!-- 3. Hacemos el contenedor 3D líquido (w-full) con alturas escalables -->
             <div class="w-full h-137.5 md:h-275 lg:h-350 relative flex items-center justify-center">
