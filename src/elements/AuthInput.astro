@@ -1,0 +1,108 @@
+---
+interface Props {
+  type?: 'text' | 'email' | 'password';
+  name: string;
+  id: string;
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+  autocomplete?: string;
+  icon?: 'mail' | 'lock' | 'user' | 'school';
+}
+
+const {
+  type = 'text',
+  name,
+  id,
+  label,
+  placeholder = '',
+  required = false,
+  autocomplete,
+  icon,
+} = Astro.props;
+---
+
+<div class="auth-field flex flex-col gap-2 w-full">
+  <label for={id} class="text-sm font-medium text-gray-300 ml-1">
+    {label}
+  </label>
+
+  <div class="relative group">
+    {icon && (
+      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-400 transition-colors duration-300 pointer-events-none">
+        {icon === 'mail' && (
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        )}
+        {icon === 'lock' && (
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        )}
+        {icon === 'user' && (
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        )}
+        {icon === 'school' && (
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m4 6 8-4 8 4"/>
+            <path d="m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2"/>
+            <path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"/>
+            <path d="M18 5v17"/>
+            <path d="M6 5v17"/>
+            <circle cx="12" cy="9" r="2"/>
+          </svg>
+        )}
+      </span>
+    )}
+
+    <input
+      type={type}
+      id={id}
+      name={name}
+      placeholder={placeholder}
+      required={required}
+      autocomplete={autocomplete}
+      class={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-4 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl
+              text-white placeholder:text-gray-500 backdrop-blur-md
+              focus:outline-none focus:border-emerald-500/60 focus:bg-zinc-900/70
+              focus:shadow-[0_0_20px_rgba(16,185,129,0.15)]
+              transition-all duration-300`}
+    />
+
+    {type === 'password' && (
+      <button
+        type="button"
+        class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-400 transition-colors duration-300"
+        aria-label="Mostrar/ocultar contraseña"
+        data-target={id}
+      >
+        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    )}
+  </div>
+
+  <p class="error-msg text-xs text-red-400 ml-1 hidden"></p>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.toggle-password').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        if (!targetId) return;
+        const input = document.getElementById(targetId) as HTMLInputElement | null;
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+      });
+    });
+  });
+</script>
