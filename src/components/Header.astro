@@ -11,7 +11,7 @@ const navItems = [
 
 <header class="fixed top-0 w-svw p-2 z-50">
     <nav class="flex justify-between items-center w-[92%] mx-auto relative">
-        <div class="flex-1"><img src="../src/media/logo.png" alt="Capital Joven" class="w-20"></div>
+        <div class="flex-1"><img src="/logo.png" alt="Capital Joven" class="w-20"></div>
         
         <div class="">
             <ul class="hidden md:flex items-center justify-center gap-11 border rounded-full px-1.5 py-2 bg-zinc-900/30 backdrop-blur-xl border-white/3 font-medium">
@@ -46,8 +46,8 @@ const navItems = [
         </div>
         
         <div class="hidden md:flex flex-1 justify-end items-center gap-10">
-            <FrostedButton text="Regístrate"/>
-            <SolidButton text="Iniciar Sesión"/>
+            <FrostedButton text="Regístrate" ref="/dashboard"/>
+            <SolidButton text="Iniciar Sesión" ref="/dashboard"/>
         </div>
         
         <button id="mobile-menu-btn" class="md:hidden relative w-10 h-10 flex items-center justify-center text-white focus:outline-none z-50">
@@ -76,10 +76,10 @@ const navItems = [
             </ul>
             <div class="flex flex-col gap-4 mt-1 pt-6 border-t border-white/10 w-[85%] mx-auto">
                 <div class="w-full flex justify-center">
-                    <SolidButton text="Iniciar Sesión" class="w-full flex items-center justify-center" />
+                    <SolidButton ref="/dashboard" text="Iniciar Sesión" class="w-full flex items-center justify-center"/>
                 </div>
                 <div class="w-full flex justify-center">
-                    <FrostedButton text="Regístrate" class="w-full flex items-center justify-center" />
+                    <FrostedButton ref="/dashboard" text="Regístrate" class="w-full flex items-center justify-center" />
                 </div>
             </div>
         </div>

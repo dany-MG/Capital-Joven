@@ -1,13 +1,13 @@
 ---
 interface Props {
   text: string;
-  href?: string;
+  ref?: string;
   class?: string;
 }
 
-const { text, href = "#" } = Astro.props;
+const { text, ref = "#" } = Astro.props;
 ---
 
-<a href={href} class={`px-6 py-2 bg-white border border-transparent rounded-full font-medium text-black  whitespace-nowrap shadow-sm transition-all duration-300 hover:shadow-[0_0_10px_rgba(16,185,129,0.5)] hover:scale-105 ${Astro.props.class || ''}`}>
+<a href={ref} class={`px-6 py-2 bg-white border border-transparent rounded-full font-medium text-black  whitespace-nowrap shadow-sm transition-all duration-300 hover:shadow-[0_0_10px_rgba(16,185,129,0.5)] hover:scale-105 ${Astro.props.class || ''}`}>
     {text}
 </a>
