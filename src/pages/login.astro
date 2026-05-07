@@ -1,0 +1,189 @@
+---
+import AuthLayout from '../components/AuthLayout.astro';
+import AuthInput from '../elements/AuthInput.astro';
+---
+
+<AuthLayout title="Iniciar Sesión">
+  <div class="auth-card w-full max-w-md bg-zinc-900/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
+
+    <!-- Header de la tarjeta -->
+    <div class="auth-item flex flex-col items-center text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" x2="3" y1="12" y2="12"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white">
+        Bienvenido de <span class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 font-[Satoshi-Bold]">vuelta</span>
+      </h1>
+      <p class="text-gray-400 text-sm mt-2">
+        Ingresa a tu cuenta y sigue al control de tus finanzas
+      </p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="login-form" class="flex flex-col gap-5" novalidate>
+
+      <div class="auth-item">
+        <AuthInput
+          type="email"
+          id="email"
+          name="email"
+          label="Correo electrónico"
+          placeholder="tu@correo.com"
+          autocomplete="email"
+          icon="mail"
+          required
+        />
+      </div>
+
+      <div class="auth-item">
+        <AuthInput
+          type="password"
+          id="password"
+          name="password"
+          label="Contraseña"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          icon="lock"
+          required
+        />
+      </div>
+
+      <!-- Recordarme + olvidé contraseña -->
+      <div class="auth-item flex items-center justify-between text-sm">
+        <label class="flex items-center gap-2 text-gray-400 cursor-pointer select-none">
+          <input type="checkbox" name="remember" class="w-4 h-4 rounded border-white/20 bg-zinc-900/50 accent-emerald-500"/>
+          <span>Recordarme</span>
+        </label>
+        <a href="#" class="text-emerald-400 hover:text-emerald-300 transition-colors">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <!-- Mensaje global de error -->
+      <p id="form-error" class="auth-item text-sm text-red-400 text-center hidden"></p>
+
+      <!-- Botón principal -->
+      <button
+        type="submit"
+        id="submit-btn"
+        class="auth-item mt-2 w-full px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold rounded-full transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+        <span class="btn-text">Iniciar sesión</span>
+        <span class="btn-loader hidden">
+          <svg class="inline-block animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+        </span>
+      </button>
+
+    </form>
+
+    <!-- Link a register -->
+    <p class="auth-item text-center text-sm text-gray-400 mt-8">
+      ¿Aún no tienes cuenta?
+      <a href="/register" class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+        Regístrate
+      </a>
+    </p>
+  </div>
+</AuthLayout>
+
+<script>
+  import { gsap } from 'gsap';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Animación de entrada (fromTo para que los elementos siempre terminen visibles
+    // aunque GSAP tarde o falle en cargar)
+    gsap.fromTo('.auth-card',
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }
+    );
+
+    gsap.fromTo('.auth-item',
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.07, ease: 'power2.out', delay: 0.2 }
+    );
+
+    // ===== Validación + envío =====
+    const form = document.getElementById('login-form') as HTMLFormElement | null;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+    const formError = document.getElementById('form-error') as HTMLElement | null;
+    if (!form || !submitBtn || !formError) return;
+
+    const showFieldError = (input: HTMLInputElement, msg: string) => {
+      const wrapper = input.closest('.auth-field');
+      const errEl = wrapper?.querySelector('.error-msg') as HTMLElement | null;
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.classList.remove('hidden');
+      }
+      input.classList.add('!border-red-500/60');
+    };
+
+    const clearFieldError = (input: HTMLInputElement) => {
+      const wrapper = input.closest('.auth-field');
+      const errEl = wrapper?.querySelector('.error-msg') as HTMLElement | null;
+      if (errEl) errEl.classList.add('hidden');
+      input.classList.remove('!border-red-500/60');
+    };
+
+    form.querySelectorAll('input').forEach((input) => {
+      input.addEventListener('input', () => clearFieldError(input as HTMLInputElement));
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.classList.add('hidden');
+
+      const data = new FormData(form);
+      const email = String(data.get('email') || '').trim();
+      const password = String(data.get('password') || '');
+
+      let valid = true;
+      const emailInput = form.querySelector<HTMLInputElement>('#email')!;
+      const passwordInput = form.querySelector<HTMLInputElement>('#password')!;
+
+      if (!email) {
+        showFieldError(emailInput, 'Ingresa tu correo electrónico');
+        valid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showFieldError(emailInput, 'Ingresa un correo válido');
+        valid = false;
+      }
+
+      if (!password) {
+        showFieldError(passwordInput, 'Ingresa tu contraseña');
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      // Estado de carga
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btn-text')?.classList.add('hidden');
+      submitBtn.querySelector('.btn-loader')?.classList.remove('hidden');
+
+      try {
+        // TODO: reemplazar por tu endpoint real
+        // const res = await fetch('/api/auth/login', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ email, password }),
+        // });
+        // if (!res.ok) throw new Error('Credenciales inválidas');
+        // const { token } = await res.json();
+        // localStorage.setItem('cj_token', token);
+
+        await new Promise((r) => setTimeout(r, 900)); // simulación
+        window.location.href = '/dashboard';
+      } catch (err) {
+        formError.textContent = (err as Error).message || 'Ocurrió un error, intenta de nuevo';
+        formError.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.querySelector('.btn-text')?.classList.remove('hidden');
+        submitBtn.querySelector('.btn-loader')?.classList.add('hidden');
+      }
+    });
+  });
+</script>

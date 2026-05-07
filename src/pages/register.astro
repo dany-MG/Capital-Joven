@@ -1,0 +1,304 @@
+---
+import AuthLayout from '../components/AuthLayout.astro';
+import AuthInput from '../elements/AuthInput.astro';
+---
+
+<AuthLayout title="Crear cuenta">
+  <div class="auth-card w-full max-w-md bg-zinc-900/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl my-8">
+
+    <!-- Header -->
+    <div class="auth-item flex flex-col items-center text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+          <line x1="19" x2="19" y1="8" y2="14"/>
+          <line x1="22" x2="16" y1="11" y2="11"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white">
+        Crea tu <span class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 font-[Satoshi-Bold]">cuenta</span>
+      </h1>
+      <p class="text-gray-400 text-sm mt-2">
+        Empieza a dominar tu economía universitaria
+      </p>
+    </div>
+
+    <!-- Formulario -->
+    <form id="register-form" class="flex flex-col gap-5" novalidate>
+
+      <div class="auth-item">
+        <AuthInput
+          type="text"
+          id="name"
+          name="name"
+          label="Nombre completo"
+          placeholder="Juan Pérez"
+          autocomplete="name"
+          icon="user"
+          required
+        />
+      </div>
+
+      <div class="auth-item">
+        <AuthInput
+          type="email"
+          id="email"
+          name="email"
+          label="Correo electrónico"
+          placeholder="tu@correo.com"
+          autocomplete="email"
+          icon="mail"
+          required
+        />
+      </div>
+
+      <div class="auth-item">
+        <AuthInput
+          type="text"
+          id="university"
+          name="university"
+          label="Universidad"
+          placeholder="Ej. IPN, UNAM, UAM..."
+          icon="school"
+        />
+      </div>
+
+      <div class="auth-item">
+        <AuthInput
+          type="password"
+          id="password"
+          name="password"
+          label="Contraseña"
+          placeholder="Mínimo 8 caracteres"
+          autocomplete="new-password"
+          icon="lock"
+          required
+        />
+        <!-- Indicador de fortaleza -->
+        <div id="strength-wrapper" class="mt-2 hidden">
+          <div class="flex gap-1">
+            <span class="strength-bar h-1 flex-1 rounded-full bg-white/10 transition-all duration-300"></span>
+            <span class="strength-bar h-1 flex-1 rounded-full bg-white/10 transition-all duration-300"></span>
+            <span class="strength-bar h-1 flex-1 rounded-full bg-white/10 transition-all duration-300"></span>
+            <span class="strength-bar h-1 flex-1 rounded-full bg-white/10 transition-all duration-300"></span>
+          </div>
+          <p id="strength-label" class="text-xs mt-1.5 ml-1 transition-colors"></p>
+        </div>
+      </div>
+
+      <div class="auth-item">
+        <AuthInput
+          type="password"
+          id="confirm"
+          name="confirm"
+          label="Confirmar contraseña"
+          placeholder="Repite tu contraseña"
+          autocomplete="new-password"
+          icon="lock"
+          required
+        />
+      </div>
+
+      <!-- Términos -->
+      <label class="auth-item flex items-start gap-2 text-sm text-gray-400 cursor-pointer select-none">
+        <input type="checkbox" name="terms" id="terms" class="w-4 h-4 mt-0.5 rounded border-white/20 bg-zinc-900/50 accent-emerald-500"/>
+        <span>
+          Acepto los <a href="#" class="text-emerald-400 hover:text-emerald-300 transition-colors">Términos y Condiciones</a> y la <a href="#" class="text-emerald-400 hover:text-emerald-300 transition-colors">Política de Privacidad</a>
+        </span>
+      </label>
+
+      <!-- Error global -->
+      <p id="form-error" class="auth-item text-sm text-red-400 text-center hidden"></p>
+
+      <!-- Botón principal -->
+      <button
+        type="submit"
+        id="submit-btn"
+        class="auth-item mt-2 w-full px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold rounded-full transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+        <span class="btn-text">Crear cuenta</span>
+        <span class="btn-loader hidden">
+          <svg class="inline-block animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+        </span>
+      </button>
+    </form>
+
+    <p class="auth-item text-center text-sm text-gray-400 mt-8">
+      ¿Ya tienes cuenta?
+      <a href="/login" class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+        Inicia sesión
+      </a>
+    </p>
+  </div>
+</AuthLayout>
+
+<script>
+  import { gsap } from 'gsap';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Animación de entrada (fromTo para que los elementos siempre terminen visibles
+    // aunque GSAP tarde o falle en cargar)
+    gsap.fromTo('.auth-card',
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }
+    );
+
+    gsap.fromTo('.auth-item',
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: 'power2.out', delay: 0.2 }
+    );
+
+    const form = document.getElementById('register-form') as HTMLFormElement | null;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+    const formError = document.getElementById('form-error') as HTMLElement | null;
+    if (!form || !submitBtn || !formError) return;
+
+    const passwordInput = form.querySelector<HTMLInputElement>('#password')!;
+    const confirmInput = form.querySelector<HTMLInputElement>('#confirm')!;
+    const strengthWrapper = document.getElementById('strength-wrapper')!;
+    const strengthBars = document.querySelectorAll<HTMLElement>('.strength-bar');
+    const strengthLabel = document.getElementById('strength-label')!;
+
+    const showFieldError = (input: HTMLInputElement, msg: string) => {
+      const wrapper = input.closest('.auth-field');
+      const errEl = wrapper?.querySelector('.error-msg') as HTMLElement | null;
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.classList.remove('hidden');
+      }
+      input.classList.add('!border-red-500/60');
+    };
+
+    const clearFieldError = (input: HTMLInputElement) => {
+      const wrapper = input.closest('.auth-field');
+      const errEl = wrapper?.querySelector('.error-msg') as HTMLElement | null;
+      if (errEl) errEl.classList.add('hidden');
+      input.classList.remove('!border-red-500/60');
+    };
+
+    form.querySelectorAll('input').forEach((input) => {
+      input.addEventListener('input', () => clearFieldError(input as HTMLInputElement));
+    });
+
+    // ===== Medidor de fortaleza (FÓRMULA CORREGIDA) =====
+    // Reglas:
+    //   +1 si longitud >= 8
+    //   +1 si tiene mayúsculas Y minúsculas
+    //   +1 si tiene números
+    //   +1 si tiene símbolos O longitud >= 12
+    // Así contraseñas largas (≥12) sin símbolo igual pueden llegar a "Fuerte".
+    const calcStrength = (pwd: string) => {
+      if (!pwd) return 0;
+      let score = 0;
+      if (pwd.length >= 8) score++;
+      if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+      if (/\d/.test(pwd)) score++;
+      if (/[^A-Za-z0-9]/.test(pwd) || pwd.length >= 12) score++;
+      return score;
+    };
+
+    const strengthClasses = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500'];
+    const strengthTextClasses = ['text-red-400', 'text-orange-400', 'text-yellow-400', 'text-emerald-400'];
+    const strengthLabels = ['Muy débil', 'Débil', 'Aceptable', 'Fuerte'];
+
+    passwordInput.addEventListener('input', () => {
+      const value = passwordInput.value;
+      if (!value) {
+        strengthWrapper.classList.add('hidden');
+        return;
+      }
+      strengthWrapper.classList.remove('hidden');
+      const score = calcStrength(value);
+
+      strengthBars.forEach((bar, idx) => {
+        bar.classList.remove(...strengthClasses, 'bg-white/10');
+        if (idx < score) {
+          bar.classList.add(strengthClasses[score - 1]);
+        } else {
+          bar.classList.add('bg-white/10');
+        }
+      });
+
+      strengthLabel.classList.remove(...strengthTextClasses, 'text-gray-400');
+      if (score > 0) {
+        strengthLabel.textContent = strengthLabels[score - 1];
+        strengthLabel.classList.add(strengthTextClasses[score - 1]);
+      } else {
+        strengthLabel.textContent = '';
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.classList.add('hidden');
+
+      const data = new FormData(form);
+      const name = String(data.get('name') || '').trim();
+      const email = String(data.get('email') || '').trim();
+      const university = String(data.get('university') || '').trim();
+      const password = String(data.get('password') || '');
+      const confirm = String(data.get('confirm') || '');
+      const termsAccepted = (form.querySelector<HTMLInputElement>('#terms'))?.checked;
+
+      let valid = true;
+      const nameInput = form.querySelector<HTMLInputElement>('#name')!;
+      const emailInput = form.querySelector<HTMLInputElement>('#email')!;
+
+      if (name.length < 3) {
+        showFieldError(nameInput, 'Ingresa tu nombre completo');
+        valid = false;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showFieldError(emailInput, 'Ingresa un correo válido');
+        valid = false;
+      }
+
+      if (password.length < 8) {
+        showFieldError(passwordInput, 'La contraseña debe tener mínimo 8 caracteres');
+        valid = false;
+      }
+
+      if (password !== confirm) {
+        showFieldError(confirmInput, 'Las contraseñas no coinciden');
+        valid = false;
+      }
+
+      if (!termsAccepted) {
+        formError.textContent = 'Debes aceptar los términos y condiciones';
+        formError.classList.remove('hidden');
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btn-text')?.classList.add('hidden');
+      submitBtn.querySelector('.btn-loader')?.classList.remove('hidden');
+
+      try {
+        // TODO: reemplazar por tu endpoint real
+        // const res = await fetch('/api/auth/register', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ name, email, university, password }),
+        // });
+        // if (!res.ok) {
+        //   const { message } = await res.json();
+        //   throw new Error(message || 'No se pudo crear la cuenta');
+        // }
+
+        await new Promise((r) => setTimeout(r, 900)); // simulación
+        window.location.href = '/login';
+      } catch (err) {
+        formError.textContent = (err as Error).message || 'Ocurrió un error, intenta de nuevo';
+        formError.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.querySelector('.btn-text')?.classList.remove('hidden');
+        submitBtn.querySelector('.btn-loader')?.classList.add('hidden');
+      }
+    });
+  });
+</script>
