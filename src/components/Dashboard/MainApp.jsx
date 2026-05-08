@@ -1,37 +1,49 @@
-import React, { useState } from 'react';
-import SideBar from './SideBar'; // Tu SideBar actualizado
-import { TipsView } from './TipsView'; // La vista que acabamos de estilizar
-// Importa tus otros componentes (Overview, etc.)
-import { SettingsView } from './SettingsView'; // Vista de configuración
+import React, { useState, useEffect } from 'react';
+import SideBar from './SideBar'; 
+import { TipsView } from './TipsView'; 
+import { SettingsView } from './SettingsView'; 
 import { AnalysisView } from './AnalysisView';
 import { TransactionsView } from './TransactionsView';
 import { HomeView } from './HomeView';  
-    
 import { Search, Bell, User } from 'lucide-react';
 
-const MOCK_TRANSACTIONS = [
-  { id: '1', date: '2023-10-02', amount: 250, type: 'expense', category: 'Comida', description: 'Compra en el supermercado' },
-  { id: '2', date: '2023-10-05', amount: 5000, type: 'income', category: 'Salario', description: 'Pago de nómina mensual' },
-  { id: '3', date: '2023-10-08', amount: 120, type: 'expense', category: 'Transporte', description: 'Uber a la universidad' },
-  { id: '4', date: '2023-10-10', amount: 400, type: 'expense', category: 'Entretenimiento', description: 'Boletos de cine' },
-  { id: '5', date: '2023-10-12', amount: 90, type: 'expense', category: 'Servicios', description: 'Suscripción de Spotify' },
-  { id: '6', date: '2023-10-14', amount: 350, type: 'expense', category: 'Comida', description: 'Cena con amigos' },
-];
+// Importamos el archivo central de mocks
+import { MOCK_TRANSACTIONS } from './MockData';
 
 export const MainApp = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
 
+  // TODO: BACKEND: Utilizar este useEffect para cargar las transacciones reales de la BD al iniciar sesión.
+  useEffect(() => {
+    /* Ejemplo de integración con axios o fetch:
+    fetch('/api/transactions/user/123')
+      .then(res => res.json())
+      .then(data => setTransactions(data))
+      .catch(error => console.error("Error cargando transacciones", error));
+    */
+  }, []);
+
   const handleAddTransaction = (newTx) => {
+    // TODO: BACKEND: Reemplazar esta lógica local por un POST a la API.
+    /*
+    fetch('/api/transactions', {
+      method: 'POST',
+      body: JSON.stringify(newTx),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => setTransactions(prev => [data, ...prev]));
+    */
+
+    // Lógica local temporal para el frontend
     if (Array.isArray(newTx)) {
-      // Para transacciones recurrentes (llega un arreglo)
       const newTransactions = newTx.map(tx => ({
         ...tx,
         id: Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9),
       }));
       setTransactions(prev => [...newTransactions, ...prev]);
     } else {
-      // Para transacciones únicas
       const transaction = {
         ...newTx,
         id: Math.random().toString(36).substr(2, 9),
@@ -42,7 +54,6 @@ export const MainApp = () => {
 
   return (
     <div className="flex h-screen bg-darkbg font-sans text-white overflow-hidden">
-      {/* Pasamos el estado y la función para cambiarlo al SideBar */}
       <SideBar activeTab={activeTab} setActiveTab={setActiveTab} />
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -52,7 +63,8 @@ export const MainApp = () => {
               {activeTab === 'dashboard' && 'Resumen Financiero'}
               {activeTab === 'tips' && 'Educación Financiera'}
               {activeTab === 'settings' && 'Configuración'}
-              {/* Agrega los títulos de las demás pestañas aquí */}
+              {activeTab === 'analysis' && 'Análisis Financiero'}
+              {activeTab === 'transactions' && 'Ingresos y Egresos'}
             </h2>
             <p className="text-gray-400 text-sm mt-1">Panel de Control</p>
           </div>
@@ -78,32 +90,15 @@ export const MainApp = () => {
 
         <main className="flex-1 overflow-y-auto p-8 scrollbar-hide">
           <div className="max-w-7xl mx-auto pb-10">
-            
-            {/* Lógica de navegación interna */}
             {activeTab === 'dashboard' && (
               <div className="animate-in fade-in duration-500">
                 <HomeView />
               </div>
             )}
-
-            {activeTab === 'tips' && (
-              <TipsView /> 
-            )}
-
-            {activeTab === 'settings' && (
-              <SettingsView />
-            )}
-
-            {activeTab === 'analysis' && (
-              <AnalysisView transactions={transactions}/>
-            )}
-
-            {activeTab === 'transactions' && (
-              <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>
-            )}
-
-            {/* Agrega aquí el resto de tus vistas: transactions, analysis, etc. */}
-            
+            {activeTab === 'tips' && <TipsView />}
+            {activeTab === 'settings' && <SettingsView />}
+            {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
+            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
           </div>
         </main>
       </div>
