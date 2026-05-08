@@ -12,6 +12,17 @@ const menuItems = [
 ]
 
 export default function SideBar({ activeTab, setActiveTab }){
+    const handleLogout = () => {
+        // TODO: BACKEND: Aquí deben limpiar el token de sesión, localStorage o cookies.
+        /* Ejemplo:
+           localStorage.removeItem('authToken');
+           sessionStorage.clear();
+        */
+        
+        // Redirigir a la página de inicio o login (Ajusta la ruta '/login' según tu proyecto en Astro)
+        window.location.href = '/';
+    }
+
     return(
         <aside className="w-64 bg-darkpanel h-full flex flex-col border-r border-white/5 p-6">
             <div className="flex items-center gap-2 mb-12">
@@ -53,7 +64,7 @@ export default function SideBar({ activeTab, setActiveTab }){
                         <p className="text-xs text-gray-500">Estudiante</p>
                     </div>
                 </div>
-                <button className="flex w-full items-center justify-center gap-2 px-4 py-2.5 bg-darkbg border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-gray-400 rounded-lg hover:text-red-400 transition-all duration-300">
+                <button className="flex w-full items-center justify-center gap-2 px-4 py-2.5 bg-darkbg border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-gray-400 rounded-lg hover:text-red-400 transition-all duration-300 cursor-pointer" onClick={handleLogout}>
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Cerrar Sesión</span>
                 </button>
