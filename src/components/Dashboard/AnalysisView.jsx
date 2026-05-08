@@ -1,12 +1,16 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Target, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Target, AlertTriangle, CheckCircle, Edit2 } from 'lucide-react'; // Agregamos el icono Edit2
 import { format, getDaysInMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export const AnalysisView = ({ transactions = [] }) => {
   // TODO: BACKEND: Este valor debe venir de la BD (Configuración del usuario)
   const [budget, setBudget] = useState(2000); 
+  
+  // Estados para controlar la edición del presupuesto
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [tempBudget, setTempBudget] = useState(budget);
   
   // TODO: BACKEND: Fecha hardcodeada para MOCKS. En producción usar: new Date()
   const analysisDate = new Date('2023-10-15'); 
@@ -15,7 +19,10 @@ export const AnalysisView = ({ transactions = [] }) => {
       /*
       fetch('/api/user/budget')
         .then(res => res.json())
-        .then(data => setBudget(data.monthlyLimit))
+        .then(data => {
+            setBudget(data.monthlyLimit);
+            setTempBudget(data.monthlyLimit);
+        })
       */
   }, []);
 
@@ -55,6 +62,42 @@ export const AnalysisView = ({ transactions = [] }) => {
 
   const PIE_COLORS = ['#10b981', '#22d3ee', '#059669', '#065f46', '#374151'];
 
+  // --- Funciones para manejar la edición del presupuesto ---
+  const handleBudgetClick = () => {
+    setTempBudget(budget);
+    setIsEditingBudget(true);
+  };
+
+  const saveBudget = () => {
+    setIsEditingBudget(false);
+    
+    // Convertimos a número por si acaso quedó como string vacío
+    const newBudget = Number(tempBudget); 
+    
+    if (newBudget > 0 && newBudget !== budget) {
+      setBudget(newBudget);
+      
+      // TODO: BACKEND: Enviar el nuevo presupuesto a la base de datos
+      /*
+      fetch('/api/user/budget', {
+        method: 'PUT',
+        body: JSON.stringify({ monthlyLimit: newBudget }),
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(err => console.error("Error guardando presupuesto", err));
+      */
+    } else {
+      setTempBudget(budget); // Restaurar si es inválido (ej. si lo dejaron en 0 o vacío)
+    }
+  };
+
+  const handleBudgetKeyDown = (e) => {
+    if (e.key === 'Enter') saveBudget();
+    if (e.key === 'Escape') {
+      setIsEditingBudget(false);
+      setTempBudget(budget);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
@@ -72,7 +115,7 @@ export const AnalysisView = ({ transactions = [] }) => {
             <p className="text-sm font-medium text-gray-400 mb-2">Gasto Actual</p>
             <h3 className="text-3xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent.toFixed(0)}</h3>
             <div className="mt-4 w-full bg-white/10 h-2 rounded-full overflow-hidden">
-              <div className="bg-gradient-to-r from-emerald-400 to-cyan-400 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${(predictionStats.currentSpent / budget) * 100}%` }}></div>
+              <div className="bg-linear-to-r from-emerald-400 to-cyan-400 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${(predictionStats.currentSpent / budget) * 100}%` }}></div>
             </div>
             <p className="text-xs text-gray-500 mt-2">{(predictionStats.currentSpent / budget * 100).toFixed(1)}% del presupuesto</p>
           </div>
@@ -98,18 +141,52 @@ export const AnalysisView = ({ transactions = [] }) => {
             </div>
           </div>
 
+          {/* TARJETA 3: PRESUPUESTO EDITABLE */}
           <div className="p-6">
             <p className="text-sm font-medium text-gray-400 mb-2">Presupuesto Definido</p>
-            <h3 className="text-3xl font-[Satoshi-Bold] text-white">${budget}</h3>
+            
+            {isEditingBudget ? (
+              <div className="flex items-center text-3xl font-[Satoshi-Bold] text-white">
+                <span className="mr-1">$</span>
+                <input
+                  type="number"
+                  autoFocus
+                  value={tempBudget}
+                  onFocus={(e) => e.target.select()} // 1. Selecciona todo al hacer clic
+                  onChange={(e) => setTempBudget(e.target.value === '' ? '' : Number(e.target.value))} // 2. Permite que esté vacío sin poner un 0
+                  onBlur={saveBudget}
+                  onKeyDown={handleBudgetKeyDown}
+                  className="bg-transparent border-b-2 border-emerald-400 outline-none w-24 text-white p-0 m-0 focus:ring-0 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+            ) : (
+              <h3 
+                onClick={handleBudgetClick}
+                className="text-3xl font-[Satoshi-Bold] text-white cursor-pointer hover:text-emerald-400 transition-colors inline-flex items-center gap-2 group"
+                title="Clic para editar"
+              >
+                ${budget}
+                <Edit2 size={16} className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500" />
+              </h3>
+            )}
+
             <p className="text-sm text-gray-400 mt-4">
-              Te quedan <span className="text-emerald-400 font-bold">${(budget - predictionStats.currentSpent).toFixed(0)}</span> disponibles para los días restantes.
+              {predictionStats.currentSpent > budget ? (
+                <>
+                  ¡Excediste tu presupuesto por <span className="text-red-400 font-bold">${(predictionStats.currentSpent - budget).toFixed(0)}</span>!
+                </>
+              ) : (
+                <>
+                  Te quedan <span className="text-emerald-400 font-bold">${(budget - predictionStats.currentSpent).toFixed(0)}</span> disponibles para los días restantes.
+                </>
+              )}
             </p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-[400px] flex flex-col group hover:border-emerald-500/30 transition-colors duration-300">
+        <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-100 flex flex-col group hover:border-emerald-500/30 transition-colors duration-300">
           <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6">Flujo de Caja Diario</h3>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
@@ -126,7 +203,7 @@ export const AnalysisView = ({ transactions = [] }) => {
           </div>
         </div>
 
-        <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-[400px] flex flex-col group hover:border-cyan-500/30 transition-colors duration-300">
+        <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-100 flex flex-col group hover:border-cyan-500/30 transition-colors duration-300">
           <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6">Distribución de Gastos</h3>
           <div className="flex-1 w-full min-h-0 relative">
             <ResponsiveContainer width="100%" height="100%">
