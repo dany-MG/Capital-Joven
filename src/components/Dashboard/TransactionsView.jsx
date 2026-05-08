@@ -45,7 +45,8 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
     description: '',
     category: 'Comida',
     type: 'expense',
-    date: new Date().toISOString().slice(0, 16),
+    // 1. Inicializamos solo con la fecha local (YYYY-MM-DD)
+    date: format(new Date(), 'yyyy-MM-dd'),
     isRecurring: false,
     frequency: 'Mensual',
     endDate: ''
@@ -55,13 +56,16 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
     e.preventDefault();
     if (!newTransaction.amount || !newTransaction.description) return;
     
-    const baseDate = new Date(newTransaction.date);
+    // 2. Tomamos la fecha del calendario y le inyectamos la hora actual del sistema
+    const currentTime = format(new Date(), 'HH:mm:ss');
+    const baseDate = new Date(`${newTransaction.date}T${currentTime}`);
+    
     const amount = parseFloat(newTransaction.amount);
     
     if (newTransaction.isRecurring) {
       const generatedTransactions = [];
       let currentDate = baseDate;
-      const endLimit = newTransaction.endDate ? new Date(newTransaction.endDate) : addMonths(baseDate, 12);
+      const endLimit = newTransaction.endDate ? new Date(`${newTransaction.endDate}T23:59:59`) : addMonths(baseDate, 12);
       
       let occurrences = 0;
       // Safeguard de hasta 50 transacciones para evitar loops masivos
@@ -99,7 +103,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
       description: '',
       category: 'Comida',
       type: 'expense',
-      date: new Date().toISOString().slice(0, 16),
+      date: format(new Date(), 'yyyy-MM-dd'),
       isRecurring: false,
       frequency: 'Mensual',
       endDate: ''
@@ -114,8 +118,8 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
     return transactions.filter(t => {
       const date = parseISO(t.date);
       const inMonth = isWithinInterval(date, { start, end });
-      const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            t.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            (t.category || '').toLowerCase().includes(searchTerm.toLowerCase());
       return inMonth && matchesSearch;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, currentMonth, searchTerm]);
@@ -145,7 +149,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
           <button onClick={prevMonth} className="p-2 hover:bg-white/5 rounded-full text-emerald-400 transition-colors duration-300">
             <ChevronLeft size={24} />
           </button>
-          <h2 className="text-xl font-[Satoshi-Bold] text-white min-w-[180px] text-center capitalize">
+          <h2 className="text-xl font-[Satoshi-Bold] text-white min-w-45 text-center capitalize">
             {format(currentMonth, 'MMMM yyyy', { locale: es })}
           </h2>
           <button onClick={nextMonth} className="p-2 hover:bg-white/5 rounded-full text-emerald-400 transition-colors duration-300">
@@ -293,8 +297,8 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
 
       {/* Modal para Agregar Transacción */}
       {isAdding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-darkbg/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-darkpanel rounded-3xl shadow-2xl border border-white/10 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-darkbg/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-darkpanel bg-zinc-900/80 rounded-3xl shadow-2xl border border-white/10 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center p-6 border-b border-white/5">
               <h3 className="text-xl font-[Satoshi-Bold] text-white">Nueva Transacción</h3>
               <button 
@@ -369,32 +373,33 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
                   >
                     {newTransaction.type === 'expense' ? (
                       <>
-                        <option value="Comida">Comida</option>
-                        <option value="Transporte">Transporte</option>
-                        <option value="Servicios">Servicios</option>
-                        <option value="Salud">Salud</option>
-                        <option value="Entretenimiento">Entretenimiento</option>
-                        <option value="Casa">Casa</option>
-                        <option value="Otros">Otros</option>
+                        <option value="Comida" className='bg-zinc-900'>Comida</option>
+                        <option value="Transporte" className='bg-zinc-900'>Transporte</option>
+                        <option value="Servicios" className='bg-zinc-900'>Servicios</option>
+                        <option value="Salud" className='bg-zinc-900'>Salud</option>
+                        <option value="Entretenimiento" className='bg-zinc-900'>Entretenimiento</option>
+                        <option value="Casa" className='bg-zinc-900'>Casa</option>
+                        <option value="Otros" className='bg-zinc-900'>Otros</option>
                       </>
                     ) : (
                       <>
-                        <option value="Salario">Salario</option>
-                        <option value="Freelance">Freelance</option>
-                        <option value="Inversiones">Inversiones</option>
-                        <option value="Otros">Otros</option>
+                        <option value="Salario" className='bg-zinc-900'>Salario</option>
+                        <option value="Freelance" className='bg-zinc-900'>Freelance</option>
+                        <option value="Inversiones" className='bg-zinc-900'>Inversiones</option>
+                        <option value="Otros" className='bg-zinc-900'>Otros</option>
                       </>
                     )}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Fecha de pago</label>
+                  <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Fecha de registro</label>
+                  {/* 3. Cambiamos a type="date" y agregamos [color-scheme:dark] */}
                   <input 
-                    type="datetime-local" 
+                    type="date" 
                     required
                     value={newTransaction.date}
                     onChange={(e) => setNewTransaction({...newTransaction, date: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-transparent focus:border-emerald-500/30 focus:bg-white/10 outline-none text-gray-300 transition-all duration-300"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-transparent focus:border-emerald-500/30 focus:bg-white/10 outline-none text-gray-300 transition-all duration-300 scheme-dark"
                   />
                 </div>
               </div>
@@ -419,18 +424,19 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
                         onChange={(e) => setNewTransaction({...newTransaction, frequency: e.target.value})}
                         className="w-full px-4 py-3 rounded-xl bg-darkpanel border border-white/10 focus:border-emerald-500/30 outline-none text-white transition-all duration-300"
                       >
-                        <option value="Mensual">Mensual</option>
-                        <option value="Quincenal">Quincenal</option>
-                        <option value="Semanal">Semanal</option>
+                        <option value="Mensual" className='bg-zinc-900'>Mensual</option>
+                        <option value="Quincenal" className='bg-zinc-900'>Quincenal</option>
+                        <option value="Semanal" className='bg-zinc-900'>Semanal</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Fecha límite</label>
+                      {/* 4. Agregamos [color-scheme:dark] al límite también */}
                       <input 
                         type="date" 
                         value={newTransaction.endDate}
                         onChange={(e) => setNewTransaction({...newTransaction, endDate: e.target.value})}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-transparent focus:border-emerald-500/30 focus:bg-white/10 outline-none text-gray-300 transition-all duration-300"
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-transparent focus:border-emerald-500/30 focus:bg-white/10 outline-none text-gray-300 transition-all duration-300 scheme-dark"
                       />
                     </div>
                   </div>
