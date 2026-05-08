@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import SideBar from './SideBar'; 
 import { TipsView } from './TipsView'; 
 import { SettingsView } from './SettingsView'; 
@@ -13,6 +14,38 @@ import { MOCK_TRANSACTIONS } from './MockData';
 export const MainApp = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
+  
+  // Referencia para el contenedor principal de GSAP
+  const appRef = useRef(null);
+
+  // Animación de entrada fluida con GSAP
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      const tl = gsap.timeline();
+
+      tl.from(".gsap-sidebar", {
+        x: -100,
+        opacity: 0,
+        duration: 0.7,
+        ease: "power3.out"
+      })
+      .from(".gsap-header", {
+        y: -30,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power3.out"
+      }, "-=0.5")
+      .from(".gsap-content", {
+        y: 30,
+        opacity: 0,
+        duration: 0.6,
+        ease: "power3.out"
+      }, "-=0.4");
+
+    }, appRef);
+
+    return () => ctx.revert(); // Limpieza para evitar bugs en React
+  }, []);
 
   // TODO: BACKEND: Utilizar este useEffect para cargar las transacciones reales de la BD al iniciar sesión.
   useEffect(() => {
@@ -53,11 +86,18 @@ export const MainApp = () => {
   };
 
   return (
-    <div className="flex h-screen bg-darkbg font-sans text-white overflow-hidden">
-      <SideBar activeTab={activeTab} setActiveTab={setActiveTab} />
+    // Agregamos el ref al contenedor principal
+    <div ref={appRef} className="flex h-screen bg-darkbg font-sans text-white overflow-hidden">
+      
+      {/* Envolvemos el Sidebar con la clase gsap-sidebar */}
+      <div className="gsap-sidebar h-full shrink-0 z-50">
+        <SideBar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="bg-darkbg/80 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
+        
+        {/* Agregamos la clase gsap-header al header */}
+        <header className="gsap-header bg-darkbg/80 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
           <div>
             <h2 className="text-2xl font-[Satoshi-Bold] text-white">
               {activeTab === 'dashboard' && 'Resumen Financiero'}
@@ -88,7 +128,8 @@ export const MainApp = () => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8 scrollbar-hide">
+        {/* Agregamos la clase gsap-content al main */}
+        <main className="gsap-content flex-1 overflow-y-auto p-8 scrollbar-hide">
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'dashboard' && (
               <div className="animate-in fade-in duration-500">
