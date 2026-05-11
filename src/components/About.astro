@@ -18,9 +18,7 @@
         </div>
 
         <!-- Título: Suavizamos el tamaño inicial a text-2xl/2.5xl para móvil y mejoramos el leading -->
-        <p data-bg-color="#9ca3af" 
-            data-fg-color="transparent"
-            class="about-title max-w-6xl mx-auto text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-medium leading-[1.4] md:leading-[1.3] text-transparent tracking-tight bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">
+        <p class="about-title max-w-6xl mx-auto text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-medium leading-[1.4] md:leading-[1.3] text-transparent tracking-tight">
             Creemos que el futuro de la gestión financiera es digital, transparente y enfocado en el estudiante. 
             Nuestra plataforma ayuda a los universitarios a transformar sus finanzas diarias en experiencias intuitivas, mejorando la confianza y el control en su vida financiera.
         </p>
@@ -38,21 +36,16 @@
         const title = document.querySelector('.about-title');
 
         const splitText = new SplitType(title, {types : 'words, chars'});
-        const bg = title.dataset.bgColor;
-        const fg = title.dataset.fgColor;
         
         gsap.fromTo(splitText.chars,
             {
-                // ESTADO INICIAL: Invisibles y de color gris
-                color : bg,
                 opacity: 0     
             },
             {
-                // ESTADO FINAL: 100% visibles y transparentes (revelando el degradado)
-                color : fg,      
-                opacity: 2,    
-                duration : 1, 
-                stagger: 0.04, 
+                color : "#10B981",      
+                opacity: 1,    
+                duration : 0.5, 
+                stagger: 0.03, 
                 ease: "power2.out", 
                 scrollTrigger: {
                     trigger: title,
