@@ -53,7 +53,7 @@ export const MOCK_USER_PROFILE = {
     lastName: 'MG',
     email: 'daniel.mg@ejemplo.com',
     phone: '+52 55 1234 5678',
-    occupation: 'Estudiante',
+    school: 'ESCOM IPN',
     currency: 'MXN',
     notifications: true,
     marketing: false
