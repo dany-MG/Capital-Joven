@@ -19,52 +19,26 @@ import Footer from "../components/Footer.astro"
         </p>
     </div>
 
-    <!-- Render 3D Spline -->
-    <div class="final-reveal absolute inset-0 w-full h-full z-20 flex flex-col items-center justify-center opacity-0 pointer-events-none">
-        
-        <!-- 1. Añadimos gap-12 para separar en móvil, y quitamos el gap en escritorio -->
-        <div class="grid grid-cols-1 md:grid-cols-2 max-w-7xl w-full px-6 items-center gap-12 md:gap-0 mt-20 md:mt-0">
-            
-            <!-- 2. Centramos todo en móvil, lo alineamos a la izquierda en 'md' -->
-            <!-- Render 3D Spline -->
     <div class="final-reveal absolute inset-0 w-full h-full z-20 flex flex-col opacity-0 pointer-events-none bg-black">
         
-        <!-- Contenedor central responsivo usando flex-1 para absorber el espacio disponible -->
-        <div class="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 md:gap-12 pt-16 md:pt-0">
+        <div class="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center md:justify-between gap-6 md:gap-8 pt-16 md:pt-0">
             
-            <!-- Mensaje -->
-            <div class="reveal-message flex flex-col items-center text-center md:items-start md:text-left z-10 w-full md:w-1/2 shrink-0">
+            <div class="reveal-message flex flex-col items-center text-center md:items-start md:text-left z-10 w-full md:w-[40%] shrink-0">
                 <h3 class="text-5xl sm:text-6xl md:text-7xl font-[Satoshi-Bold] text-white mb-2">
                     Capital Joven
                 </h3>
                 <p class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 text-xl sm:text-2xl md:text-3xl font-medium tracking-tight mb-6 md:mb-8">
                     Que tu dinero no se gradúe antes que tú.
                 </p>
-                <FrostedButton text="Comienza Ya" ref=""/> <!--- TO DO: AGREGAR LOGIN -->
+                <FrostedButton text="Comienza Ya" ref="/login"/>
             </div>
             
-            <!-- Contenedor 3D: Se adapta dinámicamente al alto en móvil (max-h-[40vh]) y recupera su tamaño en escritorio -->
-            <div class="w-full md:w-1/2 h-11/12 min-h-3/4 max-h-11/12 md:max-h-none md:h-250 lg:h-200 relative flex items-center justify-center">
+            <div class="w-full md:w-350 h-137.5 md:h-100 lg:h-150 relative flex items-center justify-center">
                 <spline-viewer class="w-full h-full" url="https://prod.spline.design/daY0ioaGjr4RloNo/scene.splinecode"></spline-viewer>
-            </div>
-            
+            </div>            
         </div>
         
-        <!-- Footer integrado naturalmente al flujo de la columna -->
         <div class="w-full shrink-0 z-30 relative">
-            <Footer/>
-        </div>
-    </div>
-            
-            <!-- 3. Hacemos el contenedor 3D líquido (w-full) con alturas escalables -->
-            <div class="w-full h-137.5 md:h-275 lg:h-350 relative flex items-center justify-center">
-                <spline-viewer class="w-full h-full" url="https://prod.spline.design/daY0ioaGjr4RloNo/scene.splinecode"></spline-viewer>
-            </div>
-            
-        </div>
-        
-        <!-- Envolvemos el Footer para que siempre quede hasta abajo de esta pantalla final -->
-        <div class="absolute bottom-0 w-full">
             <Footer/>
         </div>
     </div>
