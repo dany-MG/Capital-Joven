@@ -8,6 +8,7 @@ import { TransactionsView } from './TransactionsView';
 import { HomeView } from './HomeView';  
 import { Bell, User } from 'lucide-react';
 import { SavingView } from './SavingsView';
+import {AssesorView} from './AssesorView';
 
 // Importamos el archivo central de mocks
 import { MOCK_TRANSACTIONS } from './MockData';
@@ -106,7 +107,8 @@ export const MainApp = () => {
               {activeTab === 'settings' && 'Configuración'}
               {activeTab === 'analysis' && 'Análisis Financiero'}
               {activeTab === 'transactions' && 'Ingresos y Egresos'}
-              {}{activeTab === 'goals' && 'Ahorros y Metas'}
+              {activeTab === 'goals' && 'Ahorros y Metas'}
+              {activeTab === 'aiAssesor' && 'Asesor IA'}
             </h2>
             <p className="text-gray-400 text-sm mt-1">Panel de Control</p>
           </div>
@@ -135,6 +137,7 @@ export const MainApp = () => {
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
             {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
             {activeTab === 'goals' && <SavingView />}
+            {activeTab === 'aiAssesor' && <AssesorView />}
           </div>
         </main>
       </div>

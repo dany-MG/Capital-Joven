@@ -6,7 +6,7 @@ const menuItems = [
     { name: 'Ingresos y Egresos', icon: ArrowDownUp, id: 'transactions' },
     { name: 'Análisis', icon: BarChart3, id: 'analysis' },
     { name: 'Metas de Ahorro', icon: PiggyBank, id: 'goals' },
-    { name: 'Asesor IA', icon: BrainCircuit, id: 'ai' },
+    { name: 'Asesor IA', icon: BrainCircuit, id: 'aiAssesor' },
     { name: 'Educación Financiera', icon: BookMarked, id: 'tips' },
     { name: 'Configuración', icon: Settings, id: 'settings' },
 ]
