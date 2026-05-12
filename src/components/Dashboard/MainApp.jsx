@@ -110,14 +110,6 @@ export const MainApp = () => {
           </div>
           
           <div className="flex items-center gap-6">
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-              <input 
-                type="text" 
-                placeholder="Buscar..." 
-                className="pl-10 pr-4 py-2 rounded-full bg-white/5 border border-transparent focus:border-emerald-500/30 focus:bg-white/10 outline-none w-64 text-sm text-white transition-all duration-300"
-              />
-            </div>
             <button className="relative p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-emerald-400 transition-colors">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
