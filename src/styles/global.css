@@ -167,3 +167,14 @@ html, body {
     overflow-x: hidden;
 }
 
+/* Ocultar las flechas de los inputs numéricos en TODO el sitio */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
