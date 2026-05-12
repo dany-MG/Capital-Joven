@@ -60,6 +60,7 @@ export const SettingsView = () => {
         color: '#ffffff', // Texto en blanco
         confirmButtonColor: '#10b981', // Color bg-emerald-500
         confirmButtonText: 'Entendido',
+        timer : 3000,
         backdrop: `rgba(0,0,0,0.6)`, // Fondo oscurecido detrás de la alerta
         customClass: {
           // Inyectamos las clases de Tailwind para redondear bordes y dar estilo
