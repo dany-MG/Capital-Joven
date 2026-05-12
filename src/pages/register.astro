@@ -77,6 +77,35 @@ import AuthInput from '../elements/AuthInput.astro';
         <p class="error-msg text-xs text-red-400 ml-1 hidden"></p>
       </div>
 
+      <div class="auth-field flex flex-col gap-2 w-full auth-item">
+        <label for="incomeFrequency" class="text-sm font-medium text-gray-300 ml-1">Frecuencia</label>
+        <div class="relative group">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-400 transition-colors duration-300 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </span>
+          <select 
+            id="incomeFrequency" 
+            name="incomeFrequency" 
+            required 
+            class="w-full pl-11 pr-10 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-white backdrop-blur-md focus:outline-none focus:border-emerald-500/60 focus:bg-zinc-900/70 focus:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300 appearance-none cursor-pointer">
+            <option value="" disabled selected class="bg-zinc-900 text-gray-500">Selecciona la frecuencia</option>
+            <option value="unico" class="bg-zinc-900 text-white">Único</option>
+            <option value="semanal" class="bg-zinc-900 text-white">Semanal</option>
+            <option value="quincenal" class="bg-zinc-900 text-white">Quincenal</option>
+            <option value="mensual" class="bg-zinc-900 text-white">Mensual</option>
+          </select>
+          <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+        <p class="error-msg text-xs text-red-400 ml-1 hidden"></p>
+      </div>
+
       <div class="auth-item">
         <AuthInput
           type="number"
@@ -289,6 +318,8 @@ import AuthInput from '../elements/AuthInput.astro';
       const termsAccepted = (form.querySelector<HTMLInputElement>('#terms'))?.checked;
       const incomeSource = String(data.get('incomeSource') || '');
       const incomeAmount = String(data.get('incomeAmount') || '');
+      const incomeFrequency = String(data.get('incomeFrequency') || '');
+      
 
       let valid = true;
       const nameInput = form.querySelector<HTMLInputElement>('#name')!;
@@ -322,6 +353,7 @@ import AuthInput from '../elements/AuthInput.astro';
 
       const incomeSourceInput = form.querySelector<HTMLSelectElement>('#incomeSource')!;
       const incomeAmountInput = form.querySelector<HTMLInputElement>('#incomeAmount')!;
+      const incomeFrequencyInput = form.querySelector<HTMLSelectElement>('#incomeFrequency')!;
 
       // Validación de la fuente de ingresos
       if (!incomeSource) {
@@ -334,6 +366,12 @@ import AuthInput from '../elements/AuthInput.astro';
         showFieldError(incomeAmountInput, 'Ingresa un monto válido mayor a 0');
         valid = false;
       }
+
+      if (!incomeFrequency) {
+        showFieldError(incomeFrequencyInput as unknown as HTMLInputElement, 'Selecciona la frecuencia de tus ingresos');
+        valid = false;
+      }
+
 
       if (!valid) return;
 
