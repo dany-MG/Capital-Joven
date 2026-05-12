@@ -24,6 +24,7 @@
     "react-dom": "^19.2.6",
     "recharts": "^3.8.1",
     "split-type": "^0.3.4",
+    "sweetalert2": "^11.26.24",
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {

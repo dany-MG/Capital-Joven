@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Briefcase, Camera, Save, Lock } from 'lucide-react';
 import { MOCK_USER_PROFILE } from './MockData';
+import Swal from 'sweetalert2';
 
 export const SettingsView = () => {
   const [loading, setLoading] = useState(false);
@@ -45,13 +46,27 @@ export const SettingsView = () => {
     })
     .then(() => {
       setLoading(false);
-      alert('¡Perfil actualizado con éxito en la Base de Datos!');
+      Swal.fire('¡Éxito!', '¡Perfil actualizado con éxito en la Base de Datos!', 'success');
     });
     */
 
     setTimeout(() => {
       setLoading(false);
-      alert('¡Cambios guardados exitosamente! (Localmente)');
+      Swal.fire({
+        title: '¡Cambios Guardados!',
+        text: 'Tu información ha sido actualizada exitosamente.',
+        icon: 'success',
+        background: '#101010', // Color de fondo darkpanel
+        color: '#ffffff', // Texto en blanco
+        confirmButtonColor: '#10b981', // Color bg-emerald-500
+        confirmButtonText: 'Entendido',
+        backdrop: `rgba(0,0,0,0.6)`, // Fondo oscurecido detrás de la alerta
+        customClass: {
+          // Inyectamos las clases de Tailwind para redondear bordes y dar estilo
+          popup: 'border border-white/10 rounded-3xl shadow-2xl',
+          confirmButton: 'px-8 py-3 rounded-full font-bold text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300 hover:scale-105',
+        }
+      });
     }, 1500);
   };
 
