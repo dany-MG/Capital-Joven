@@ -85,7 +85,7 @@ export const SavingView = () => {
   }
 
   return (
-    <div className="animate-in fade-in duration-500 max-w-6xl mx-auto space-y-8 p-4">
+    <div className="animate-in fade-in duration-500 max-w-8xl w-full mx-auto space-y-8 p-4">
       
       {/* HEADER DE LA META */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
