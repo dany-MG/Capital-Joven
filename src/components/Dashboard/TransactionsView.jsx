@@ -171,7 +171,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
           
           <button 
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-darkbg px-4 py-2 rounded-xl transition-colors duration-300 font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20"
+            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-darkbg px-4 py-2 rounded-xl transition-colors duration-300 font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20 cursor-pointer"
           >
             <Plus size={18} />
             <span className="hidden sm:inline">Nueva</span>
@@ -181,7 +181,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
 
       {/* Tarjetas de Resumen Mensual */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-emerald-500/5 border border-emerald-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-emerald-500/10 transition-colors">
+        <div className="bg-emerald-500/5 border border-emerald-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-emerald-500/10 transition-colors duration-300">
           <div>
             <p className="text-sm text-emerald-400 font-medium mb-1">Ingresos de {format(currentMonth, 'MMMM', { locale: es })}</p>
             <p className="text-2xl font-[Satoshi-Bold] text-emerald-400">+${totals.income.toFixed(2)}</p>
@@ -191,7 +191,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
           </div>
         </div>
 
-        <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-red-500/10 transition-colors">
+        <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-red-500/10 transition-colors duration-300">
           <div>
             <p className="text-sm text-red-400 font-medium mb-1">Gastos de {format(currentMonth, 'MMMM', { locale: es })}</p>
             <p className="text-2xl font-[Satoshi-Bold] text-red-400">-${totals.expense.toFixed(2)}</p>
@@ -201,7 +201,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
           </div>
         </div>
 
-        <div className="bg-cyan-500/5 border border-cyan-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-cyan-500/10 transition-colors">
+        <div className="bg-cyan-500/5 border border-cyan-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-cyan-500/10 transition-colors duration-300">
           <div>
             <p className="text-sm text-cyan-400 font-medium mb-1">Balance Mensual</p>
             <p className={`text-2xl font-[Satoshi-Bold] ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>

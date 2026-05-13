@@ -6,99 +6,128 @@ import { SettingsView } from './SettingsView';
 import { AnalysisView } from './AnalysisView';
 import { TransactionsView } from './TransactionsView';
 import { HomeView } from './HomeView';  
-import { Bell, User } from 'lucide-react';
+import { Bell, User, Settings, ArrowRight, Loader2 } from 'lucide-react';
 import { SavingView } from './SavingsView';
-import {AssesorView} from './AssesorView';
+import { AsesorView } from './AssesorView';
 
-// Importamos el archivo central de mocks
-import { MOCK_TRANSACTIONS } from './MockData';
+// Importamos los mocks solo para la simulación temporal
+import { MOCK_TRANSACTIONS, MOCK_USER_PROFILE } from './MockData';
 
 export const MainApp = () => {
+  // =====================================================================
+  // 1. ESTADOS PRINCIPALES (Data Driven)
+  // =====================================================================
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
+  const [showUserMenu, setShowUserMenu] = useState(false); 
   
-  // Referencia para el contenedor principal de GSAP
-  const appRef = useRef(null);
+  // Estados para datos del Backend
+  const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
+  const [transactions, setTransactions] = useState([]);
 
-  // Animación de entrada fluida con GSAP
+  // =====================================================================
+  // 2. REFERENCIAS (DOM & GSAP)
+  // =====================================================================
+  const appRef = useRef(null);
+  const userMenuRef = useRef(null);
+
+  // =====================================================================
+  // 3. CONEXIÓN CON EL BACKEND (Carga inicial de datos)
+  // =====================================================================
   useEffect(() => {
+    // TODO: BACKEND - Aquí se deben cargar el perfil del usuario y sus transacciones.
+    /* Ejemplo de implementación real usando axios o fetch:
+    Promise.all([
+      fetch('/api/user/profile').then(res => res.json()),
+      fetch('/api/transactions').then(res => res.json())
+    ])
+    .then(([userData, txData]) => {
+      setUserProfile(userData);
+      setTransactions(txData);
+      setIsLoading(false);
+    })
+    .catch(error => {
+      console.error("Error al cargar datos del backend:", error);
+      setIsLoading(false);
+    });
+    */
+
+    // Simulación temporal (MOCK) para que el frontend siga siendo funcional
+    setTimeout(() => {
+      setUserProfile(MOCK_USER_PROFILE);
+      setTransactions(MOCK_TRANSACTIONS);
+      setIsLoading(false);
+    }, 1200); // 1.2 segundos de carga simulada
+  }, []);
+
+  // =====================================================================
+  // 4. LÓGICA DE INTERFAZ Y EVENTOS
+  // =====================================================================
+  
+  // Cierre del menú al dar clic afuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Animación GSAP (Solo corre cuando ya no está cargando)
+  useEffect(() => {
+    if (isLoading) return;
+
     let ctx = gsap.context(() => {
       const tl = gsap.timeline();
-
-      tl.from(".gsap-sidebar", {
-        x: -100,
-        opacity: 0,
-        duration: 0.7,
-        ease: "power3.out"
-      })
-      .from(".gsap-header", {
-        y: -30,
-        opacity: 0,
-        duration: 0.6,
-        ease: "power3.out"
-      }, "-=0.5")
-      .from(".gsap-content", {
-        y: 30,
-        opacity: 0,
-        duration: 0.6,
-        ease: "power3.out"
-      }, "-=0.4");
-
+      tl.from(".gsap-sidebar", { x: -100, opacity: 0, duration: 0.7, ease: "power3.out" })
+        .from(".gsap-header", { y: -30, opacity: 0, duration: 0.6, ease: "power3.out" }, "-=0.5")
+        .from(".gsap-content", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, "-=0.4");
     }, appRef);
 
-    return () => ctx.revert(); // Limpieza para evitar bugs en React
-  }, []);
-
-  // TODO: BACKEND: Utilizar este useEffect para cargar las transacciones reales de la BD al iniciar sesión.
-  useEffect(() => {
-    /* Ejemplo de integración con axios o fetch:
-    fetch('/api/transactions/user/123')
-      .then(res => res.json())
-      .then(data => setTransactions(data))
-      .catch(error => console.error("Error cargando transacciones", error));
-    */
-  }, []);
+    return () => ctx.revert(); 
+  }, [isLoading]);
 
   const handleAddTransaction = (newTx) => {
-    // TODO: BACKEND: Reemplazar esta lógica local por un POST a la API.
-    /*
-    fetch('/api/transactions', {
-      method: 'POST',
-      body: JSON.stringify(newTx),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then(res => res.json())
-    .then(data => setTransactions(prev => [data, ...prev]));
-    */
-
-    // Lógica local temporal para el frontend
+    // TODO: BACKEND - Reemplazar por un POST a la base de datos.
     if (Array.isArray(newTx)) {
       const newTransactions = newTx.map(tx => ({
         ...tx,
-        id: Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substr(2, 9),
       }));
       setTransactions(prev => [...newTransactions, ...prev]);
     } else {
-      const transaction = {
-        ...newTx,
-        id: Math.random().toString(36).substr(2, 9),
-      };
+      const transaction = { ...newTx, id: Math.random().toString(36).substr(2, 9) };
       setTransactions(prev => [transaction, ...prev]);
     }
   };
 
+  const showUserInfo = () => setShowUserMenu(!showUserMenu);
+
+  // =====================================================================
+  // 5. PANTALLA DE CARGA (Loading Screen)
+  // =====================================================================
+  if (isLoading || !userProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-darkbg text-emerald-400">
+        <Loader2 className="w-12 h-12 animate-spin mb-4" />
+        <p className="text-gray-400 font-[Satoshi-Medium]">Iniciando entorno de Capital Joven...</p>
+      </div>
+    );
+  }
+
+  // =====================================================================
+  // 6. RENDER PRINCIPAL DEL DASHBOARD
+  // =====================================================================
   return (
-    // Agregamos el ref al contenedor principal
     <div ref={appRef} className="flex h-screen bg-darkbg font-sans text-white overflow-hidden">
       
-      {/* Envolvemos el Sidebar con la clase gsap-sidebar */}
       <div className="gsap-sidebar h-full shrink-0 z-50">
         <SideBar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        
-        {/* Agregamos la clase gsap-header al header */}
         <header className="gsap-header bg-darkbg/80 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
           <div>
             <h2 className="text-2xl font-[Satoshi-Bold] text-white">
@@ -114,17 +143,78 @@ export const MainApp = () => {
           </div>
           
           <div className="flex items-center gap-6">
-            <button className="relative p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-emerald-400 transition-colors">
+            <button className="relative p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
             </button>
-            <div className="w-10 h-10 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-500/30">
-              <User size={20} />
+            
+            <div className="relative" ref={userMenuRef}>
+              <div onClick={showUserInfo} className="w-10 h-10 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-600/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300">
+                {/* Fallback inicial de avatar en el botón */}
+                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstName[0]}{userProfile.lastName[0]}</span>
+              </div>
+
+              {showUserMenu && (
+                <>
+                  <div className="absolute right-0 mt-3 w-72 bg-[#101010]/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    
+                    <div className="p-6 border-b border-white/5 bg-white/[0.02] relative overflow-hidden flex flex-col items-center">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
+                      
+                      <div className="relative mb-4">
+                        <div className="w-20 h-20 rounded-full bg-emerald-950/50 border-2 border-emerald-500/30 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                          {/* TODO: BACKEND - Usar userProfile.avatarUrl */}
+                          <img 
+                            src={userProfile.avatarUrl || "/avatar-placeholder.png"} 
+                            alt="Foto de perfil" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement.innerHTML = `<span class="text-emerald-400 text-2xl font-[Satoshi-Bold]">${userProfile.firstName[0]}${userProfile.lastName[0]}</span>`;
+                            }}
+                          />
+                        </div>
+                        <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-4 border-[#101010] rounded-full"></div>
+                      </div>
+
+                      <div className="text-center relative z-10">
+                        {/* INYECCIÓN DE DATOS DEL ESTADO */}
+                        <p className="font-[Satoshi-Bold] text-white text-xl leading-tight">
+                          {userProfile.firstName} {userProfile.lastName}
+                        </p>
+                        <p className="text-gray-500 text-sm mt-1">{userProfile.email}</p>
+                        
+                        <div className="mt-4 px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl">
+                          <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest">
+                            {userProfile.school}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3">
+                      <button
+                        onClick={() => {
+                          setActiveTab('settings');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-emerald-500/10 rounded-2xl transition-all duration-300 group cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Settings size={18} className="text-emerald-400 group-hover:rotate-45 transition-transform duration-500" />
+                          Modificar Perfil
+                        </div>
+                        <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      </button>
+                    </div>
+
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Agregamos la clase gsap-content al main */}
         <main className="gsap-content flex-1 overflow-y-auto p-8 scrollbar-hide">
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'dashboard' && (
@@ -133,11 +223,14 @@ export const MainApp = () => {
               </div>
             )}
             {activeTab === 'tips' && <TipsView />}
-            {activeTab === 'settings' && <SettingsView />}
+            
+            {/* Ahora le pasamos el userProfile real a SettingsView para que lo editen */}
+            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} />}
+            
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
             {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
             {activeTab === 'goals' && <SavingView />}
-            {activeTab === 'aiAssesor' && <AssesorView />}
+            {activeTab === 'aiAssesor' && <AsesorView />}
           </div>
         </main>
       </div>

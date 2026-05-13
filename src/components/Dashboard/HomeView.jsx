@@ -50,7 +50,7 @@ export const HomeView = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
           
-          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-[420px] flex flex-col group hover:border-white/10 transition-colors">
+          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-105 flex flex-col group hover:border-white/10 transition-colors duration-300">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-1.5 h-6 bg-emerald-400 rounded-full"></div>
               <h3 className="text-lg font-[Satoshi-Bold] text-white">Tendencia de Gastos vs Predicción</h3>
@@ -91,7 +91,7 @@ export const HomeView = () => {
             </div>
           </div>
 
-          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5">
+          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 hover:border-white/10 transition-colors duration-300">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-[Satoshi-Bold] text-white">Transacciones Recientes</h3>
               <button className="text-emerald-400 text-sm font-medium hover:underline">Ver Todo</button>
@@ -122,7 +122,7 @@ export const HomeView = () => {
         </div>
 
         <div className="xl:col-span-1 space-y-6">
-          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 group hover:border-emerald-500/30 transition-colors">
+          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 group hover:border-emerald-500/30 transition-colors duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 border border-emerald-500/20">
                 <TrendingUpIcon size={20} />
@@ -151,7 +151,7 @@ export const HomeView = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-950/80 to-darkpanel p-6 rounded-2xl shadow-lg border border-emerald-500/20 relative overflow-hidden group">
+          <div className="bg-linear-to-br from-emerald-950/80 to-darkpanel p-6 rounded-2xl shadow-lg border border-emerald-500/20 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-6 opacity-10 text-emerald-400 transition-transform duration-500 group-hover:scale-110">
               <Wallet size={80} />
             </div>
@@ -162,11 +162,11 @@ export const HomeView = () => {
               <span className="text-sm text-gray-400">de $5,000</span>
             </div>
             <div className="w-full bg-black/40 h-2.5 rounded-full overflow-hidden relative z-10">
-              <div className="bg-gradient-to-r from-emerald-400 to-cyan-400 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: '49%' }}></div>
+              <div className="bg-linear-to-r from-emerald-400 to-cyan-400 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: '49%' }}></div>
             </div>
           </div>
 
-          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 group hover:border-cyan-500/30 transition-colors">
+          <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 group hover:border-cyan-500/30 transition-colors duration-300">
              <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20">
                 <Lightbulb size={20} />

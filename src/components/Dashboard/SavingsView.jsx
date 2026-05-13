@@ -111,7 +111,7 @@ export const SavingView = () => {
         <div className="lg:col-span-2 space-y-8">
           
           {/* TARJETA DE GRÁFICA */}
-          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 relative overflow-hidden">
+          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 relative overflow-hidden hover:border-white/10 transition-colors duration-300">
             <div className="flex justify-between items-end mb-8">
               <div>
                 <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Progreso Histórico</p>
@@ -164,7 +164,7 @@ export const SavingView = () => {
           </div>
 
           {/* BARRA DE PROGRESO DETALLADA */}
-          <div className="bg-zinc-900/20 border border-white/5 rounded-3xl p-8">
+          <div className="bg-zinc-900/20 border border-white/5 rounded-3xl p-8 hover:border-white/10 transition-colors duration-300">
             <div className="flex justify-between items-center mb-4">
               <span className="text-white font-medium">Estado del Objetivo</span>
               <span className="text-gray-400 text-sm">{progressPercentage}% Completado</span>
@@ -201,7 +201,7 @@ export const SavingView = () => {
 
         {/* SIDEBAR: DETALLES Y FECHAS */}
         <div className="space-y-6">
-          <div className="bg-darkpanel border border-white/5 rounded-3xl p-6">
+          <div className="bg-darkpanel border border-white/5 rounded-3xl p-6 hover:border-white/10 transition-colors duration-300">
             <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6 flex items-center gap-2">
               <Calendar className="text-emerald-400" size={20} />
               Cronograma de Meta
@@ -231,7 +231,7 @@ export const SavingView = () => {
             </div>
           </div>
 
-          <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6">
+          <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6 hover:border-white/10 transition-colors duration-300">
              <h3 className="text-lg font-[Satoshi-Bold] text-white mb-4">Consejo Financiero</h3>
              <p className="text-sm text-gray-400 leading-relaxed italic">
                "Automatiza tus ahorros el mismo día que recibas tus ingresos para evitar la tentación de gastarlos."
