@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, ArrowDownUp, BarChart3, PiggyBank, Settings, BrainCircuit, LogOut, UserCircle, BookMarked} from 'lucide-react';
+import { Home, ArrowDownUp, BarChart3, PiggyBank, Settings, BrainCircuit, LogOut, BookMarked} from 'lucide-react';
 
 const menuItems = [
     { name: 'Inicio', icon: Home, id: 'dashboard' },
@@ -11,15 +11,10 @@ const menuItems = [
     { name: 'Configuración', icon: Settings, id: 'settings' },
 ]
 
-export default function SideBar({ activeTab, setActiveTab }){
+// Añadimos userProfile a las props que recibe el componente
+export default function SideBar({ activeTab, setActiveTab, userProfile }){
     const handleLogout = () => {
         // TODO: BACKEND: Aquí deben limpiar el token de sesión, localStorage o cookies.
-        /* Ejemplo:
-           localStorage.removeItem('authToken');
-           sessionStorage.clear();
-        */
-        
-        // Redirigir a la página de inicio o login (Ajusta la ruta '/login' según tu proyecto en Astro)
         window.location.href = '/';
     }
 
@@ -57,13 +52,38 @@ export default function SideBar({ activeTab, setActiveTab }){
             </nav>
 
             <div className="border-t border-white/5 pt-6 mt-6 space-y-4">
-                <div className="flex items-center gap-3">
-                    <UserCircle className="w-10 h-10 text-gray-600" />
-                    <div>
-                        <p className="font-[Satoshi-Medium] text-white">Dany MG</p>
-                        <p className="text-xs text-gray-500">Estudiante</p>
+                <div className="flex items-center gap-3 overflow-hidden">
+                    
+                    {/* INYECCIÓN DE AVATAR / INICIALES DEL BACKEND */}
+                    <div className="w-10 h-10 rounded-full bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400 overflow-hidden shrink-0">
+                        {userProfile?.avatarUrl ? (
+                            <img 
+                                src={userProfile.avatarUrl} 
+                                alt="Perfil" 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement.innerHTML = `<span class="font-[Satoshi-Bold] text-sm">${userProfile?.firstName?.[0] || ''}${userProfile?.lastName?.[0] || ''}</span>`;
+                                }}
+                            />
+                        ) : (
+                            <span className="font-[Satoshi-Bold] text-sm">
+                                {userProfile?.firstName?.[0] || ''}{userProfile?.lastName?.[0] || ''}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* INYECCIÓN DE DATOS DEL BACKEND */}
+                    <div className="overflow-hidden">
+                        <p className="font-[Satoshi-Medium] text-white truncate">
+                            {userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Cargando...'}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                            {userProfile?.school || 'Estudiante'}
+                        </p>
                     </div>
                 </div>
+
                 <button className="flex w-full items-center justify-center gap-2 px-4 py-2.5 bg-darkbg border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-gray-400 rounded-lg hover:text-red-400 transition-all duration-300 cursor-pointer" onClick={handleLogout}>
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Cerrar Sesión</span>

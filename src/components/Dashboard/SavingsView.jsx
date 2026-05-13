@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, Calendar, Info, ChevronRight, DollarSign, Flag, Plus, Loader2 } from 'lucide-react';
+import { Target, TrendingUp, Calendar, Info, ChevronRight, DollarSign, Flag, Plus, Loader2, Check } from 'lucide-react';
+import Swal from 'sweetalert2'; // Asumiendo que ya usas SweetAlert por el AsesorView
 
 export const SavingView = () => {
   // =====================================================================
-  // 1. ZONA DE ESTADOS (Preparado para la inyección de datos del Backend)
+  // 1. ESTADOS LOCALES (Preparados para la API)
   // =====================================================================
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false); // Estado para evitar doble-clic al guardar
+  
+  // Estructura exacta que el Backend debería devolver en su JSON
   const [goalData, setGoalData] = useState({
     title: "",
     description: "",
@@ -13,25 +17,27 @@ export const SavingView = () => {
     currentAmount: 0,
     startDate: "",
     endDate: "",
-    chartPoints: [] // Puntos para dibujar la gráfica
+    monthlySuggestion: 0,
+    chartPoints: [], 
+    chartLabels: [] 
   });
 
   // =====================================================================
-  // 2. PETICIONES AL BACKEND (Donde el equipo conectará las APIs)
+  // 2. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
   useEffect(() => {
-    // TODO: BACKEND - Aquí deben hacer la petición GET a la base de datos
-    /* Ejemplo de implementación real:
-      fetch('/api/users/123/savings-goal')
+    // TODO: BACKEND - Petición GET para traer la meta de ahorro activa del usuario
+    /* Ejemplo real:
+      fetch('/api/savings/current')
         .then(res => res.json())
         .then(data => {
           setGoalData(data);
-          setLoading(false);
+          setIsLoading(false);
         })
         .catch(err => console.error("Error al cargar la meta:", err));
     */
 
-    // Simulación temporal (Mock) para que el frontend funcione mientras conectan
+    // Simulación temporal para el Frontend
     setTimeout(() => {
       setGoalData({
         title: "Fondo de Emergencia",
@@ -40,46 +46,100 @@ export const SavingView = () => {
         currentAmount: 3200,
         startDate: "01/01/2024",
         endDate: "30/06/2024",
-        chartPoints: [0, 800, 1500, 2200, 3200]
+        monthlySuggestion: 450,
+        chartPoints: [0, 800, 1500, 2200, 3200],
+        chartLabels: ['Ene', 'Feb', 'Mar', 'Abr', 'May']
       });
-      setLoading(false);
-    }, 800); // 800ms de carga simulada
+      setIsLoading(false);
+    }, 800);
   }, []);
 
-  const handleAddSavings = () => {
-    // TODO: BACKEND - Lógica para abrir un modal, pedir el monto al usuario y hacer el POST
-    /* Ejemplo de implementación:
-      fetch('/api/users/123/savings/add', {
-        method: 'POST',
-        body: JSON.stringify({ amount: 500 }), 
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(() => {
-        // Actualizar el estado local o volver a hacer el GET
-      });
-    */
-    alert("Aquí se abrirá el modal para inyectar fondos. (Tarea para Backend)");
+  // =====================================================================
+  // 3. ACTUALIZACIÓN DE DATOS (POST / PUT)
+  // =====================================================================
+  const handleAddSavings = async () => {
+    // 1. Preguntar al usuario cuánto quiere ahorrar usando SweetAlert
+    const { value: amount } = await Swal.fire({
+      title: 'Añadir Ahorro',
+      input: 'number',
+      inputLabel: 'Monto a transferir a tu meta',
+      inputPlaceholder: 'Ej. 500',
+      showCancelButton: true,
+      confirmButtonText: 'Añadir',
+      cancelButtonText: 'Cancelar',
+      background: '#101010',
+      color: '#ffffff',
+      confirmButtonColor: '#10b981',
+      inputAttributes: { min: 1, step: 1 }
+    });
+
+    if (amount) {
+      setIsAdding(true); // Deshabilita el botón y muestra loader
+      
+      const numericAmount = Number(amount);
+
+      // TODO: BACKEND - Petición POST para registrar el nuevo ahorro
+      /* Ejemplo real:
+      try {
+        const response = await fetch('/api/savings/add', {
+          method: 'POST',
+          body: JSON.stringify({ amount: numericAmount }), 
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error("Fallo en la transacción");
+        
+        // Si el backend responde con el objeto actualizado, lo seteamos:
+        // const updatedData = await response.json();
+        // setGoalData(updatedData);
+
+      } catch(error) {
+        console.error(error);
+        Swal.fire('Error', 'No se pudo guardar el ahorro', 'error');
+      } finally {
+        setIsAdding(false);
+      }
+      */
+
+      // Simulación optimista para Frontend
+      setTimeout(() => {
+        setGoalData(prev => ({
+          ...prev,
+          currentAmount: prev.currentAmount + numericAmount
+        }));
+        setIsAdding(false);
+        
+        Swal.fire({
+          toast: true,
+          position: 'bottom-end',
+          icon: 'success',
+          title: `¡Felicidades! Sumaste $${numericAmount} a tu meta.`,
+          showConfirmButton: false,
+          timer: 3000,
+          background: '#101010',
+          color: '#10b981'
+        });
+      }, 1000);
+    }
   };
 
   // =====================================================================
-  // 3. CÁLCULOS DEL FRONTEND (El backend no necesita enviar porcentajes)
+  // 4. CÁLCULOS SEGUROS DEL FRONTEND
   // =====================================================================
   const progressPercentage = goalData.targetAmount > 0 
-    ? ((goalData.currentAmount / goalData.targetAmount) * 100).toFixed(1) 
+    ? Math.min(((goalData.currentAmount / goalData.targetAmount) * 100), 100).toFixed(1) 
     : 0;
   
-  const remainingAmount = goalData.targetAmount - goalData.currentAmount;
+  const remainingAmount = Math.max(goalData.targetAmount - goalData.currentAmount, 0);
 
   // =====================================================================
-  // 4. RENDER DE LA INTERFAZ
+  // 5. RENDERIZADO DE LA INTERFAZ
   // =====================================================================
-
-  // Pantalla de carga mientras el backend responde
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-emerald-400 animate-in fade-in">
         <Loader2 className="animate-spin w-12 h-12 mb-4" />
-        <p className="text-gray-400 font-medium">Sincronizando tus metas...</p>
+        <p className="text-gray-400 font-[Satoshi-Medium]">Sincronizando tus metas...</p>
       </div>
     );
   }
@@ -99,9 +159,19 @@ export const SavingView = () => {
           <p className="text-gray-400 max-w-xl">{goalData.description}</p>
         </div>
         
-        <button onClick={handleAddSavings} className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-3 rounded-2xl font-bold transition-all cursor-pointer shadow-lg hover:shadow-emerald-500/20 flex items-center gap-2">
-          <Plus size={20} />
-          Añadir Ahorro
+        <button 
+          onClick={handleAddSavings} 
+          disabled={isAdding || goalData.currentAmount >= goalData.targetAmount}
+          className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-black px-6 py-3 rounded-2xl font-bold transition-all cursor-pointer shadow-lg hover:shadow-emerald-500/20 flex items-center gap-2"
+        >
+          {isAdding ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : goalData.currentAmount >= goalData.targetAmount ? (
+            <Check size={20} />
+          ) : (
+            <Plus size={20} />
+          )}
+          {goalData.currentAmount >= goalData.targetAmount ? 'Meta Completada' : 'Añadir Ahorro'}
         </button>
       </div>
 
@@ -123,7 +193,7 @@ export const SavingView = () => {
               </div>
             </div>
 
-            {/* GRÁFICA SVG (Línea Recta de Progreso) */}
+            {/* GRÁFICA SVG */}
             <div className="h-64 w-full relative">
               <svg viewBox="0 0 1000 250" className="w-full h-full overflow-visible">
                 <defs>
@@ -132,15 +202,12 @@ export const SavingView = () => {
                     <stop offset="100%" stopColor="#22d3ee" />
                   </linearGradient>
                 </defs>
-                {/* Líneas de guía estáticas */}
                 <line x1="0" y1="0" x2="1000" y2="0" stroke="#ffffff05" strokeWidth="1" />
                 <line x1="0" y1="125" x2="1000" y2="125" stroke="#ffffff05" strokeWidth="1" />
                 <line x1="0" y1="250" x2="1000" y2="250" stroke="#ffffff10" strokeWidth="2" />
                 
-                {/* TODO: BACKEND / FRONTEND AVANZADO
-                  La ruta "d" y los "circle" pueden ser mapeados dinámicamente usando goalData.chartPoints
-                  cuando las matemáticas de coordenadas se conecten a la API real. 
-                */}
+                {/* TODO: BACKEND - Para hacer esto dinámico, reemplazar por Recharts 
+                    o un generador de SVG basado en goalData.chartPoints */}
                 <path 
                   d="M 0 250 L 250 210 L 500 175 L 750 140 L 1000 90" 
                   fill="none" 
@@ -157,9 +224,15 @@ export const SavingView = () => {
               </svg>
             </div>
 
-            {/* TODO: BACKEND - Las etiquetas de meses también deben venir de la BD */}
+            {/* Inyección dinámica de las etiquetas de la gráfica desde el Backend */}
             <div className="flex justify-between mt-4 text-xs font-bold text-gray-500 uppercase">
-              <span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span>
+              {goalData.chartLabels.length > 0 ? (
+                goalData.chartLabels.map((label, index) => (
+                  <span key={index}>{label}</span>
+                ))
+              ) : (
+                <><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span></>
+              )}
             </div>
           </div>
 
@@ -180,20 +253,19 @@ export const SavingView = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                 <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Actual</p>
-                <p className="text-xl font-[Satoshi-Bold] text-white">${goalData.currentAmount.toLocaleString()}</p>
+                <p className="text-xl font-[Satoshi-Bold] text-white">${goalData.currentAmount.toLocaleString('es-MX')}</p>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                 <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Objetivo</p>
-                <p className="text-xl font-[Satoshi-Bold] text-emerald-400">${goalData.targetAmount.toLocaleString()}</p>
+                <p className="text-xl font-[Satoshi-Bold] text-emerald-400">${goalData.targetAmount.toLocaleString('es-MX')}</p>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                 <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Restante</p>
-                <p className="text-xl font-[Satoshi-Bold] text-cyan-400">${remainingAmount.toLocaleString()}</p>
+                <p className="text-xl font-[Satoshi-Bold] text-cyan-400">${remainingAmount.toLocaleString('es-MX')}</p>
               </div>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                 <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Mensual Sug.</p>
-                {/* TODO: BACKEND - Sugerencia calculada por la API */}
-                <p className="text-xl font-[Satoshi-Bold] text-white">$450</p>
+                <p className="text-xl font-[Satoshi-Bold] text-white">${goalData.monthlySuggestion.toLocaleString('es-MX')}</p>
               </div>
             </div>
           </div>
@@ -224,7 +296,7 @@ export const SavingView = () => {
             </div>
 
             <div className="mt-8 p-4 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
-              <Info className="text-cyan-400 flex-shrink-0" size={18} />
+              <Info className="text-cyan-400 shrink-0" size={18} />
               <p className="text-xs text-gray-400">
                 Basado en tu ritmo actual, alcanzarás tu meta antes de lo previsto. ¡Sigue así!
               </p>
@@ -236,7 +308,7 @@ export const SavingView = () => {
              <p className="text-sm text-gray-400 leading-relaxed italic">
                "Automatiza tus ahorros el mismo día que recibas tus ingresos para evitar la tentación de gastarlos."
              </p>
-             <button className="w-full mt-6 flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl text-white text-sm transition-all">
+             <button className="w-full mt-6 flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl text-white text-sm transition-all cursor-pointer">
                 Ver más tips de ahorro
                 <ChevronRight size={16} />
              </button>

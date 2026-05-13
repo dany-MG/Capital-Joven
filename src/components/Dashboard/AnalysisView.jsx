@@ -1,36 +1,97 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Target, AlertTriangle, CheckCircle, Edit2 } from 'lucide-react'; // Agregamos el icono Edit2
+import { Target, AlertTriangle, CheckCircle, Edit2, Loader2 } from 'lucide-react'; // Añadimos Loader2
 import { format, getDaysInMonth, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export const AnalysisView = ({ transactions = [] }) => {
-  // TODO: BACKEND: Este valor debe venir de la BD (Configuración del usuario)
-  const [budget, setBudget] = useState(2000); 
-  
-  // Estados para controlar la edición del presupuesto
+  // =====================================================================
+  // 1. ESTADOS LOCALES
+  // =====================================================================
+  const [budget, setBudget] = useState(0); 
   const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [tempBudget, setTempBudget] = useState(budget);
+  const [tempBudget, setTempBudget] = useState(0);
+  const [isLoadingBudget, setIsLoadingBudget] = useState(true);
   
-  // TODO: BACKEND: Fecha hardcodeada para MOCKS. En producción usar: new Date()
+  // =====================================================================
+  // 2. CONFIGURACIÓN DE FECHAS
+  // =====================================================================
+  // TODO: BACKEND - En producción, esto debe ser `new Date()` para evaluar el mes actual.
+  // Se mantiene estático en '2023-10-15' para coincidir con los MOCKS de prueba.
   const analysisDate = new Date('2023-10-15'); 
+  const currentMonthStr = format(analysisDate, 'yyyy-MM'); // Genera dinámicamente "2023-10"
 
+  // =====================================================================
+  // 3. OBTENCIÓN DE DATOS (GET)
+  // =====================================================================
   useEffect(() => {
-      /*
-      fetch('/api/user/budget')
+      // TODO: BACKEND - Hacer fetch a la BD para traer el límite mensual del usuario
+      /* Ejemplo real:
+      fetch('/api/user/settings/budget')
         .then(res => res.json())
         .then(data => {
             setBudget(data.monthlyLimit);
             setTempBudget(data.monthlyLimit);
+            setIsLoadingBudget(false);
         })
+        .catch(err => console.error("Error cargando el presupuesto:", err));
       */
+
+      // Simulación temporal para el Frontend
+      setTimeout(() => {
+        setBudget(2000);
+        setTempBudget(2000);
+        setIsLoadingBudget(false);
+      }, 800);
   }, []);
 
+  // =====================================================================
+  // 4. ACTUALIZACIÓN DE DATOS (PUT/POST)
+  // =====================================================================
+  const saveBudget = () => {
+    setIsEditingBudget(false);
+    const newBudget = Number(tempBudget); 
+    
+    if (newBudget > 0 && newBudget !== budget) {
+      // Actualización Optimista (Cambia en pantalla antes de que responda el server)
+      setBudget(newBudget);
+      
+      // TODO: BACKEND - Enviar el nuevo presupuesto a la base de datos
+      /* Ejemplo real:
+      fetch('/api/user/settings/budget', {
+        method: 'PUT',
+        body: JSON.stringify({ monthlyLimit: newBudget }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => {
+        if(!res.ok) throw new Error("Fallo al actualizar en el servidor");
+      })
+      .catch(err => {
+        console.error("Error guardando presupuesto", err);
+        // Si el servidor falla, revertimos al presupuesto anterior en pantalla
+        setBudget(budget);
+        setTempBudget(budget);
+      });
+      */
+    } else {
+      setTempBudget(budget); // Restaurar si es inválido (ej. si lo dejaron en 0)
+    }
+  };
+
+  // =====================================================================
+  // 5. PROCESAMIENTO Y MATEMÁTICAS (Lógica manejada por el Frontend)
+  // =====================================================================
+  // Nota para Backend: Solo inyecten las 'transactions' en bruto. 
+  // Estos useMemo se encargan de calcular promedios, proyecciones y categorías solos.
+
   const monthlyTransactions = useMemo(() => {
-    return transactions.filter(t => t.date.startsWith('2023-10'));
-  }, [transactions]);
+    return transactions.filter(t => t.date.startsWith(currentMonthStr));
+  }, [transactions, currentMonthStr]);
 
   const predictionStats = useMemo(() => {
+    // Evitar divisiones o cálculos raros si el presupuesto sigue cargando
+    if (budget === 0) return { currentSpent: 0, projectedTotal: 0, isOverBudget: false, remainingBudget: 0, dailyAvg: 0 };
+
     const currentSpent = monthlyTransactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
     const daysInMonth = getDaysInMonth(analysisDate);
     const dayOfMonth = analysisDate.getDate();
@@ -62,32 +123,10 @@ export const AnalysisView = ({ transactions = [] }) => {
 
   const PIE_COLORS = ['#10b981', '#22d3ee', '#059669', '#065f46', '#374151'];
 
-  // --- Funciones para manejar la edición del presupuesto ---
+  // Eventos de Teclado
   const handleBudgetClick = () => {
     setTempBudget(budget);
     setIsEditingBudget(true);
-  };
-
-  const saveBudget = () => {
-    setIsEditingBudget(false);
-    
-    // Convertimos a número por si acaso quedó como string vacío
-    const newBudget = Number(tempBudget); 
-    
-    if (newBudget > 0 && newBudget !== budget) {
-      setBudget(newBudget);
-      
-      // TODO: BACKEND: Enviar el nuevo presupuesto a la base de datos
-      /*
-      fetch('/api/user/budget', {
-        method: 'PUT',
-        body: JSON.stringify({ monthlyLimit: newBudget }),
-        headers: { 'Content-Type': 'application/json' }
-      }).catch(err => console.error("Error guardando presupuesto", err));
-      */
-    } else {
-      setTempBudget(budget); // Restaurar si es inválido (ej. si lo dejaron en 0 o vacío)
-    }
   };
 
   const handleBudgetKeyDown = (e) => {
@@ -98,6 +137,9 @@ export const AnalysisView = ({ transactions = [] }) => {
     }
   };
 
+  // =====================================================================
+  // 6. RENDERIZADO DE LA INTERFAZ
+  // =====================================================================
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
@@ -107,7 +149,7 @@ export const AnalysisView = ({ transactions = [] }) => {
             <Target className="text-emerald-400" />
             Predicción de Cierre de Mes
           </h2>
-          <p className="text-sm text-gray-400 mt-1">Basado en tu comportamiento hasta el 15 de Octubre</p>
+          <p className="text-sm text-gray-400 mt-1">Basado en tu comportamiento hasta el {format(analysisDate, "d 'de' MMMM", { locale: es })}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5">
@@ -115,9 +157,11 @@ export const AnalysisView = ({ transactions = [] }) => {
             <p className="text-sm font-medium text-gray-400 mb-2">Gasto Actual</p>
             <h3 className="text-3xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent.toFixed(0)}</h3>
             <div className="mt-4 w-full bg-white/10 h-2 rounded-full overflow-hidden">
-              <div className="bg-linear-to-r from-emerald-400 to-cyan-400 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${(predictionStats.currentSpent / budget) * 100}%` }}></div>
+              <div className="bg-linear-to-r from-emerald-400 to-cyan-400 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" style={{ width: `${Math.min((predictionStats.currentSpent / (budget || 1)) * 100, 100)}%` }}></div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">{(predictionStats.currentSpent / budget * 100).toFixed(1)}% del presupuesto</p>
+            <p className="text-xs text-gray-500 mt-2">
+              {budget > 0 ? ((predictionStats.currentSpent / budget) * 100).toFixed(1) : 0}% del presupuesto
+            </p>
           </div>
 
           <div className="p-6 bg-white/5 relative overflow-hidden group">
@@ -145,15 +189,20 @@ export const AnalysisView = ({ transactions = [] }) => {
           <div className="p-6">
             <p className="text-sm font-medium text-gray-400 mb-2">Presupuesto Definido</p>
             
-            {isEditingBudget ? (
+            {/* Animación de carga si aún no llega el presupuesto del Backend */}
+            {isLoadingBudget ? (
+              <div className="h-9 flex items-center">
+                 <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
+              </div>
+            ) : isEditingBudget ? (
               <div className="flex items-center text-3xl font-[Satoshi-Bold] text-white">
                 <span className="mr-1">$</span>
                 <input
                   type="number"
                   autoFocus
                   value={tempBudget}
-                  onFocus={(e) => e.target.select()} // 1. Selecciona todo al hacer clic
-                  onChange={(e) => setTempBudget(e.target.value === '' ? '' : Number(e.target.value))} // 2. Permite que esté vacío sin poner un 0
+                  onFocus={(e) => e.target.select()} 
+                  onChange={(e) => setTempBudget(e.target.value === '' ? '' : Number(e.target.value))} 
                   onBlur={saveBudget}
                   onKeyDown={handleBudgetKeyDown}
                   className="bg-transparent border-b-2 border-emerald-400 outline-none w-24 text-white p-0 m-0 focus:ring-0 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
