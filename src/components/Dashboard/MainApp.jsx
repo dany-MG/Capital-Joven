@@ -8,7 +8,7 @@ import { TransactionsView } from './TransactionsView';
 import { HomeView } from './HomeView';  
 import { Bell, User, Settings, ArrowRight, Loader2 } from 'lucide-react';
 import { SavingView } from './SavingsView';
-import { AsesorView } from './AssesorView';
+import { AssesorView } from './AssesorView';
 
 // Importamos los mocks solo para la simulación temporal
 import { MOCK_TRANSACTIONS, MOCK_USER_PROFILE } from './MockData';
@@ -124,7 +124,7 @@ export const MainApp = () => {
     <div ref={appRef} className="flex h-screen bg-darkbg font-sans text-white overflow-hidden">
       
       <div className="gsap-sidebar h-full shrink-0 z-50">
-        <SideBar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <SideBar activeTab={activeTab} setActiveTab={setActiveTab} userProfile={userProfile} />
       </div>
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -158,7 +158,7 @@ export const MainApp = () => {
                 <>
                   <div className="absolute right-0 mt-3 w-72 bg-[#101010]/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     
-                    <div className="p-6 border-b border-white/5 bg-white/[0.02] relative overflow-hidden flex flex-col items-center">
+                    <div className="p-6 border-b border-white/5 bg-white/2 relative overflow-hidden flex flex-col items-center">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
                       
                       <div className="relative mb-4">
@@ -230,7 +230,7 @@ export const MainApp = () => {
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
             {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
             {activeTab === 'goals' && <SavingView />}
-            {activeTab === 'aiAssesor' && <AsesorView />}
+            {activeTab === 'aiAssesor' && <AssesorView/>}
           </div>
         </main>
       </div>
