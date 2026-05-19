@@ -29,7 +29,7 @@ export default function SideBar({ activeTab, setActiveTab, userProfile, isOpen, 
             )}
 
             {/* CONTENEDOR PRINCIPAL: Fijo en móviles, estático en escritorio */}
-            <aside className={`fixed md:relative inset-y-0 left-0 w-svw bg-darkpanel h-full flex flex-col border-r border-white/5 p-6 z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+            <aside className={`fixed md:relative inset-y-0 left-0 w-svw md:w-64 bg-darkpanel h-full flex flex-col border-r border-white/5 p-6 z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
                 
                 {/* BOTÓN CERRAR: Solo visible en móviles */}
                 <button 
