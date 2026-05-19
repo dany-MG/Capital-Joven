@@ -6,7 +6,7 @@ import { SettingsView } from './SettingsView';
 import { AnalysisView } from './AnalysisView';
 import { TransactionsView } from './TransactionsView';
 import { HomeView } from './HomeView';  
-import { Bell, User, Settings, ArrowRight, Loader2 } from 'lucide-react';
+import { Bell, User, Settings, ArrowRight, Loader2, Menu } from 'lucide-react';
 import { SavingView } from './SavingsView';
 import { AssesorView } from './AssesorView';
 
@@ -19,6 +19,7 @@ export const MainApp = () => {
   // =====================================================================
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showUserMenu, setShowUserMenu] = useState(false); 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Estado para el menú móvil
   
   // Estados para datos del Backend
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +65,7 @@ export const MainApp = () => {
   // 4. LÓGICA DE INTERFAZ Y EVENTOS
   // =====================================================================
   
-  // Cierre del menú al dar clic afuera
+  // Cierre del menú de usuario al dar clic afuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -81,16 +82,17 @@ export const MainApp = () => {
 
     let ctx = gsap.context(() => {
       const tl = gsap.timeline();
-      tl.from(".gsap-sidebar", { x: -100, opacity: 0, duration: 0.7, ease: "power3.out" })
-        .from(".gsap-header", { y: -30, opacity: 0, duration: 0.6, ease: "power3.out" }, "-=0.5")
-        .from(".gsap-content", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, "-=0.4");
+      // Usamos clearProps: "transform" para evitar conflictos visuales con los elementos fixed en móviles
+      tl.from(".gsap-sidebar", { x: -100, opacity: 0, duration: 0.7, ease: "power3.out", clearProps: "transform" })
+        .from(".gsap-header", { y: -30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "transform" }, "-=0.5")
+        .from(".gsap-content", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "transform" }, "-=0.4");
     }, appRef);
 
     return () => ctx.revert(); 
   }, [isLoading]);
 
   const handleAddTransaction = (newTx) => {
-    // TODO: BACKEND - Reemplazar por un POST a la base de datos.
+    // TODO: BACKEND - Reemplazar por un POST a la base de datos si deciden no hacerlo directamente en TransactionsView.
     if (Array.isArray(newTx)) {
       const newTransactions = newTx.map(tx => ({
         ...tx,
@@ -123,26 +125,45 @@ export const MainApp = () => {
   return (
     <div ref={appRef} className="flex h-screen bg-darkbg font-sans text-white overflow-hidden">
       
+      {/* Pasamos los estados de apertura al SideBar */}
       <div className="gsap-sidebar h-full shrink-0 z-50">
-        <SideBar activeTab={activeTab} setActiveTab={setActiveTab} userProfile={userProfile} />
+        <SideBar 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          userProfile={userProfile} 
+          isOpen={isMobileMenuOpen} 
+          setIsOpen={setIsMobileMenuOpen} 
+        />
       </div>
       
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="gsap-header bg-darkbg/80 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
-          <div>
-            <h2 className="text-2xl font-[Satoshi-Bold] text-white">
-              {activeTab === 'dashboard' && 'Resumen Financiero'}
-              {activeTab === 'tips' && 'Educación Financiera'}
-              {activeTab === 'settings' && 'Configuración'}
-              {activeTab === 'analysis' && 'Análisis Financiero'}
-              {activeTab === 'transactions' && 'Ingresos y Egresos'}
-              {activeTab === 'goals' && 'Ahorros y Metas'}
-              {activeTab === 'aiAssesor' && 'Asesor IA'}
-            </h2>
-            <p className="text-gray-400 text-sm mt-1">Panel de Control</p>
+      <div className="flex-1 flex flex-col h-screen overflow-hidden w-full">
+        <header className="gsap-header bg-darkbg/80 backdrop-blur-md border-b border-white/5 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-40">
+          
+          <div className="flex items-center gap-4">
+            {/* Botón de Hamburguesa solo visible en móviles */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer"
+            >
+              <Menu size={24} />
+            </button>
+            
+            <div>
+              <h2 className="text-xl md:text-2xl font-[Satoshi-Bold] text-white">
+                {activeTab === 'dashboard' && 'Resumen Financiero'}
+                {activeTab === 'tips' && 'Educación Financiera'}
+                {activeTab === 'settings' && 'Configuración'}
+                {activeTab === 'analysis' && 'Análisis Financiero'}
+                {activeTab === 'transactions' && 'Ingresos y Egresos'}
+                {activeTab === 'goals' && 'Ahorros y Metas'}
+                {activeTab === 'aiAssesor' && 'Asesor IA'}
+              </h2>
+              {/* Ocultamos el subtítulo en móviles para ahorrar espacio en la barra superior */}
+              <p className="text-gray-400 text-sm mt-1 hidden md:block">Panel de Control</p>
+            </div>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <button className="relative p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
@@ -215,7 +236,8 @@ export const MainApp = () => {
           </div>
         </header>
 
-        <main className="gsap-content flex-1 overflow-y-auto p-8 scrollbar-hide">
+        {/* Espaciado ajustado para móviles */}
+        <main className="gsap-content flex-1 overflow-y-auto p-4 md:p-8 scrollbar-hide">
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'dashboard' && (
               <div className="animate-in fade-in duration-500">
@@ -230,7 +252,7 @@ export const MainApp = () => {
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
             {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
             {activeTab === 'goals' && <SavingView />}
-            {activeTab === 'aiAssesor' && <AssesorView/>}
+            {activeTab === 'aiAssesor' && <AssesorView />}
           </div>
         </main>
       </div>
