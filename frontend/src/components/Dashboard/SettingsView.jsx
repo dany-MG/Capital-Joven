@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Mail, Phone, Briefcase, Camera, Save, Lock, Loader2 } from 'lucide-react';
+import { User, Mail, Briefcase, Camera, Save, Lock, Loader2, Key, Eye, EyeOff } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 // Recibimos 'initialUserData' desde MainApp para no hacer un GET redundante
@@ -8,9 +8,21 @@ export const SettingsView = ({ initialUserData }) => {
   // 1. ESTADOS LOCALES Y REFERENCIAS
   // =====================================================================
   const [loading, setLoading] = useState(false);
+  
+  // Estado para la información básica
   const [formData, setFormData] = useState(initialUserData || {
-    firstName: '', lastName: '', email: '', phone: '', school: '', avatarUrl: ''
+    firstName: '', lastName: '', email: '', school: '', avatarUrl: ''
   });
+
+  // Estado para el cambio de contraseña
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+  
+  // Estado para mostrar/ocultar contraseñas en la UI
+  const [showPasswords, setShowPasswords] = useState(false);
   
   // Referencia para el input de archivo oculto (Subida de Avatar)
   const fileInputRef = useRef(null);
@@ -23,41 +35,68 @@ export const SettingsView = ({ initialUserData }) => {
   }, [initialUserData]);
 
   // =====================================================================
-  // 2. LÓGICA DE ACTUALIZACIÓN DE PERFIL (PUT)
+  // 2. LÓGICA DE ACTUALIZACIÓN DE DATOS
   // =====================================================================
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswords(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validación de contraseñas desde el Frontend antes de molestar al Backend
+    if (passwords.new || passwords.current || passwords.confirm) {
+      if (!passwords.current) {
+        return Swal.fire({
+          title: 'Falta información', text: 'Debes ingresar tu contraseña actual para realizar cambios de seguridad.', icon: 'warning', background: '#101010', color: '#ffffff', confirmButtonColor: '#10b981'
+        });
+      }
+      if (passwords.new !== passwords.confirm) {
+        return Swal.fire({
+          title: 'Error de coincidencia', text: 'Las contraseñas nuevas no coinciden. Intenta de nuevo.', icon: 'error', background: '#101010', color: '#ffffff', confirmButtonColor: '#ef4444'
+        });
+      }
+      if (passwords.new.length > 0 && passwords.new.length < 8) {
+        return Swal.fire({
+          title: 'Contraseña débil', text: 'La nueva contraseña debe tener al menos 8 caracteres.', icon: 'warning', background: '#101010', color: '#ffffff', confirmButtonColor: '#10b981'
+        });
+      }
+    }
+
     setLoading(true);
     
-    // TODO: BACKEND - Petición PUT/PATCH para actualizar los datos de texto del usuario
-    /* Ejemplo de implementación real:
+    // TODO: BACKEND - Petición PUT/PATCH para actualizar el perfil
+    /* Si 'passwords.new' tiene contenido, el backend debe validar que 'passwords.current' 
+    coincida con el hash de la BD antes de encriptar y guardar la nueva.
+    
+    const payload = {
+      ...formData,
+      ...(passwords.new && { currentPassword: passwords.current, newPassword: passwords.new })
+    };
+
     try {
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
         headers: { 'Content-Type': 'application/json' }
       });
-      
-      if (!response.ok) throw new Error("Fallo al actualizar el perfil");
-      
-      Swal.fire('¡Éxito!', 'Perfil actualizado correctamente.', 'success');
-      // Opcional: Refrescar el estado global en MainApp si es necesario
-    } catch (error) {
-      console.error(error);
-      Swal.fire('Error', 'No se pudo guardar la configuración', 'error');
-    } finally {
-      setLoading(false);
-    }
+      // Manejar respuesta...
+    } catch (error) { ... }
     */
 
     // Simulación Frontend
     setTimeout(() => {
       setLoading(false);
+      
+      // Limpiar los campos de contraseña después de guardar exitosamente
+      setPasswords({ current: '', new: '', confirm: '' });
+
       Swal.fire({
         title: '¡Cambios Guardados!',
         text: 'Tu información ha sido actualizada exitosamente.',
@@ -77,40 +116,15 @@ export const SettingsView = ({ initialUserData }) => {
   };
 
   // =====================================================================
-  // 3. LÓGICA DE SUBIDA DE IMAGEN (POST - Multipart/FormData)
+  // 3. LÓGICA DE SUBIDA DE IMAGEN Y SESIÓN
   // =====================================================================
-  const handleAvatarClick = () => {
-    // Simula un clic en el input de archivo oculto
-    fileInputRef.current?.click();
-  };
+  const handleAvatarClick = () => fileInputRef.current?.click();
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // TODO: BACKEND - Petición POST para subir el archivo de imagen (Avatar) a un bucket/servidor
-    /* Ejemplo de implementación real (FormData):
-    const uploadData = new FormData();
-    uploadData.append('avatar', file);
-
-    try {
-      // Mostrar estado de carga visual en la imagen si lo desean...
-      const response = await fetch('/api/user/avatar', {
-        method: 'POST',
-        body: uploadData // No establecer Content-Type, el navegador lo hace por los boundaries
-      });
-      
-      const data = await response.json();
-      // data.newAvatarUrl debería contener la URL pública de la imagen recién subida
-      setFormData(prev => ({ ...prev, avatarUrl: data.newAvatarUrl }));
-      
-    } catch (error) {
-      console.error("Error al subir imagen:", error);
-      Swal.fire('Error', 'El archivo es muy pesado o no es válido.', 'error');
-    }
-    */
-
-    // Simulación Frontend: Leer archivo localmente para previsualización inmediata
+    // TODO: BACKEND - Subir archivo a bucket/servidor
     const reader = new FileReader();
     reader.onloadend = () => {
       setFormData(prev => ({ ...prev, avatarUrl: reader.result }));
@@ -118,21 +132,13 @@ export const SettingsView = ({ initialUserData }) => {
     reader.readAsDataURL(file);
   };
 
-  // =====================================================================
-  // 4. LÓGICA DE SESIÓN (Cerrar Sesión)
-  // =====================================================================
   const handleLogout = () => {
-    // TODO: BACKEND - Limpiar cookies HTTP-Only o LocalStorage/SessionStorage
-    /* Ejemplo:
-       fetch('/api/auth/logout', { method: 'POST' }); // Si usan cookies de sesión
-       localStorage.removeItem('token');
-       sessionStorage.clear();
-    */
+    // TODO: BACKEND - Limpiar sesión
     window.location.href = '/';
   };
 
   // =====================================================================
-  // 5. RENDERIZADO DE LA INTERFAZ
+  // 4. RENDERIZADO DE LA INTERFAZ
   // =====================================================================
   return (
     <div className="animate-in fade-in duration-500 max-w-4xl mx-auto">
@@ -154,7 +160,6 @@ export const SettingsView = ({ initialUserData }) => {
           <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 text-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#10b9810d,transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
-            {/* Input de archivo oculto para el Backend */}
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -176,7 +181,6 @@ export const SettingsView = ({ initialUserData }) => {
                   </span>
                 )}
                 
-                {/* Overlay de cámara al pasar el mouse */}
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity rounded-full">
                   <Camera size={28} className="text-white" />
                 </div>
@@ -207,8 +211,10 @@ export const SettingsView = ({ initialUserData }) => {
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: FORMULARIO DE DATOS */}
+        {/* COLUMNA DERECHA: FORMULARIOS */}
         <div className="lg:col-span-2 space-y-6">
+          
+          {/* BLOQUE 1: INFORMACIÓN BÁSICA */}
           <div className="bg-darkpanel p-8 rounded-2xl shadow-lg border border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,#34d39933,#22d3ee33,transparent)]"></div>
 
@@ -241,16 +247,8 @@ export const SettingsView = ({ initialUserData }) => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Teléfono</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Escuela</label>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Escuela / Institución</label>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                   <input type="text" name="school" value={formData.school} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
@@ -258,7 +256,74 @@ export const SettingsView = ({ initialUserData }) => {
               </div>
             </div>
           </div>
+
+          {/* BLOQUE 2: SEGURIDAD Y CONTRASEÑA */}
+          <div className="bg-darkpanel p-8 rounded-2xl shadow-lg border border-white/5 relative overflow-hidden group">
+            <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6 border-b border-white/5 pb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Key className="text-emerald-400" size={20} />
+                Seguridad
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowPasswords(!showPasswords)}
+                className="text-xs font-bold text-gray-400 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                {showPasswords ? <><EyeOff size={14}/> Ocultar</> : <><Eye size={14}/> Mostrar</>}
+              </button>
+            </h3>
+
+            <div className="space-y-6 relative z-10">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contraseña Actual</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                  <input 
+                    type={showPasswords ? "text" : "password"} 
+                    name="current" 
+                    value={passwords.current} 
+                    onChange={handlePasswordChange} 
+                    placeholder="Ingresa tu contraseña actual para hacer cambios"
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Nueva Contraseña</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                    <input 
+                      type={showPasswords ? "text" : "password"} 
+                      name="new" 
+                      value={passwords.new} 
+                      onChange={handlePasswordChange} 
+                      placeholder="Mínimo 8 caracteres"
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Confirmar Contraseña</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                    <input 
+                      type={showPasswords ? "text" : "password"} 
+                      name="confirm" 
+                      value={passwords.confirm} 
+                      onChange={handlePasswordChange} 
+                      placeholder="Repite la nueva contraseña"
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           
+          {/* BOTÓN GUARDAR (Global) */}
           <div className="flex justify-end pt-4">
              <button 
                type="submit" 
