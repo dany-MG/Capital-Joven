@@ -1,321 +1,368 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, Calendar, Info, ChevronRight, DollarSign, Flag, Plus, Loader2, Check } from 'lucide-react';
-import Swal from 'sweetalert2'; // Asumiendo que ya usas SweetAlert por el AsesorView
+import { Target, Calendar, Plus, Loader2, Check, X, Info, ChevronRight, TrendingUp, Trash2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export const SavingView = () => {
   // =====================================================================
-  // 1. ESTADOS LOCALES (Preparados para la API)
+  // 1. ESTADOS (Multimetas)
   // =====================================================================
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false); // Estado para evitar doble-clic al guardar
+  const [goals, setGoals] = useState([]); 
+  const [showForm, setShowForm] = useState(false); 
   
-  // Estructura exacta que el Backend debería devolver en su JSON
-  const [goalData, setGoalData] = useState({
-    title: "",
-    description: "",
-    targetAmount: 0,
-    currentAmount: 0,
-    startDate: "",
-    endDate: "",
-    monthlySuggestion: 0,
-    chartPoints: [], 
-    chartLabels: [] 
+  const [newGoal, setNewGoal] = useState({
+    title: '',
+    description: '',
+    targetAmount: '',
+    startDate: '',
+    endDate: ''
   });
 
   // =====================================================================
   // 2. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
   useEffect(() => {
-    // TODO: BACKEND - Petición GET para traer la meta de ahorro activa del usuario
-    /* Ejemplo real:
-      fetch('/api/savings/current')
-        .then(res => res.json())
-        .then(data => {
-          setGoalData(data);
-          setIsLoading(false);
-        })
-        .catch(err => console.error("Error al cargar la meta:", err));
+    // TODO: BACKEND - GET de todas las metas del usuario
+    /* fetch('/api/savings/goals')
+      .then(res => res.json())
+      .then(data => {
+        setGoals(data);
+        setIsLoading(false);
+      });
     */
 
-    // Simulación temporal para el Frontend
+    // Simulación temporal
     setTimeout(() => {
-      setGoalData({
-        title: "Fondo de Emergencia",
-        description: "Dinero reservado para imprevistos médicos o reparaciones urgentes durante el semestre.",
-        targetAmount: 5000,
-        currentAmount: 3200,
-        startDate: "01/01/2024",
-        endDate: "30/06/2024",
-        monthlySuggestion: 450,
-        chartPoints: [0, 800, 1500, 2200, 3200],
-        chartLabels: ['Ene', 'Feb', 'Mar', 'Abr', 'May']
-      });
+      setGoals([
+        {
+          id: 1,
+          title: "Fondo de Emergencia",
+          description: "Reservado para imprevistos médicos.",
+          targetAmount: 5000,
+          currentAmount: 5000, // <--- Simulamos esta como completada para que veas el efecto
+          startDate: "2024-01-01",
+          endDate: "2024-06-30"
+        },
+        {
+          id: 2,
+          title: "Laptop Nueva",
+          description: "Ahorro para renovación de equipo.",
+          targetAmount: 15000,
+          currentAmount: 1500,
+          startDate: "2024-02-15",
+          endDate: "2024-12-20"
+        }
+      ]);
       setIsLoading(false);
-    }, 800);
+    }, 1000);
   }, []);
 
   // =====================================================================
-  // 3. ACTUALIZACIÓN DE DATOS (POST / PUT)
+  // 3. LÓGICA DE ACCIONES (POST / PUT / DELETE)
   // =====================================================================
-  const handleAddSavings = async () => {
-    // 1. Preguntar al usuario cuánto quiere ahorrar usando SweetAlert
+
+  // CREAR META (POST)
+  const handleCreateGoal = (e) => {
+    e.preventDefault();
+    
+    const goalToSave = {
+      ...newGoal,
+      id: Date.now(),
+      currentAmount: 0,
+      targetAmount: Number(newGoal.targetAmount)
+    };
+
+    // TODO: BACKEND - POST a /api/savings/goals
+    setGoals([...goals, goalToSave]);
+    setShowForm(false);
+    setNewGoal({ title: '', description: '', targetAmount: '', startDate: '', endDate: '' });
+
+    Swal.fire({
+      toast: true, position: 'bottom-end', icon: 'success',
+      title: 'Meta creada exitosamente', showConfirmButton: false, timer: 3000,
+      background: '#101010', color: '#10b981'
+    });
+  };
+
+  // ABONAR A META (PUT)
+  const handleAddFunds = async (goalId) => {
     const { value: amount } = await Swal.fire({
       title: 'Añadir Ahorro',
       input: 'number',
-      inputLabel: 'Monto a transferir a tu meta',
+      inputLabel: '¿Cuánto deseas abonar a esta meta?',
       inputPlaceholder: 'Ej. 500',
       showCancelButton: true,
-      confirmButtonText: 'Añadir',
+      confirmButtonText: 'Abonar',
       cancelButtonText: 'Cancelar',
-      background: '#101010',
-      color: '#ffffff',
-      confirmButtonColor: '#10b981',
-      inputAttributes: { min: 1, step: 1 }
+      background: '#101010', color: '#ffffff', confirmButtonColor: '#10b981',
     });
 
     if (amount) {
-      setIsAdding(true); // Deshabilita el botón y muestra loader
-      
       const numericAmount = Number(amount);
 
-      // TODO: BACKEND - Petición POST para registrar el nuevo ahorro
-      /* Ejemplo real:
-      try {
-        const response = await fetch('/api/savings/add', {
-          method: 'POST',
-          body: JSON.stringify({ amount: numericAmount }), 
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (!response.ok) throw new Error("Fallo en la transacción");
-        
-        // Si el backend responde con el objeto actualizado, lo seteamos:
-        // const updatedData = await response.json();
-        // setGoalData(updatedData);
+      // TODO: BACKEND - PUT/POST a /api/savings/goals/${goalId}/add-funds
+      setGoals(prevGoals => prevGoals.map(goal => 
+        goal.id === goalId 
+          ? { ...goal, currentAmount: goal.currentAmount + numericAmount } 
+          : goal
+      ));
 
-      } catch(error) {
-        console.error(error);
-        Swal.fire('Error', 'No se pudo guardar el ahorro', 'error');
-      } finally {
-        setIsAdding(false);
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: `Abono de $${numericAmount} registrado`,
+        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+      });
+    }
+  };
+
+  // ELIMINAR META (DELETE)
+  const handleDeleteGoal = async (goalId) => {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "Se eliminará esta meta y su progreso. Esta acción no se puede deshacer.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#27272a',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      background: '#101010',
+      color: '#ffffff'
+    });
+
+    if (result.isConfirmed) {
+      // TODO: BACKEND - DELETE a /api/savings/goals/${goalId}
+      /* Ejemplo de implementación real:
+      try {
+        const response = await fetch(`/api/savings/goals/${goalId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error("Fallo al eliminar");
+      } catch (error) {
+        return Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
       }
       */
 
-      // Simulación optimista para Frontend
-      setTimeout(() => {
-        setGoalData(prev => ({
-          ...prev,
-          currentAmount: prev.currentAmount + numericAmount
-        }));
-        setIsAdding(false);
-        
-        Swal.fire({
-          toast: true,
-          position: 'bottom-end',
-          icon: 'success',
-          title: `¡Felicidades! Sumaste $${numericAmount} a tu meta.`,
-          showConfirmButton: false,
-          timer: 3000,
-          background: '#101010',
-          color: '#10b981'
-        });
-      }, 1000);
+      // Actualización de UI Frontend
+      setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
+
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: 'Meta eliminada correctamente',
+        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+      });
     }
   };
 
   // =====================================================================
-  // 4. CÁLCULOS SEGUROS DEL FRONTEND
+  // 4. CÁLCULOS AUXILIARES
   // =====================================================================
-  const progressPercentage = goalData.targetAmount > 0 
-    ? Math.min(((goalData.currentAmount / goalData.targetAmount) * 100), 100).toFixed(1) 
-    : 0;
-  
-  const remainingAmount = Math.max(goalData.targetAmount - goalData.currentAmount, 0);
+  const calculateProgress = (current, target) => {
+    return Math.min((current / target) * 100, 100).toFixed(1);
+  };
 
-  // =====================================================================
-  // 5. RENDERIZADO DE LA INTERFAZ
-  // =====================================================================
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] text-emerald-400 animate-in fade-in">
+      <div className="flex flex-col items-center justify-center h-[70vh] text-emerald-400">
         <Loader2 className="animate-spin w-12 h-12 mb-4" />
-        <p className="text-gray-400 font-[Satoshi-Medium]">Sincronizando tus metas...</p>
+        <p className="text-gray-400">Cargando tus objetivos...</p>
       </div>
     );
   }
 
   return (
-    <div className="animate-in fade-in duration-500 max-w-8xl w-full mx-auto space-y-8 p-4">
+    <div className="animate-in fade-in duration-500 max-w-7xl mx-auto space-y-8">
       
-      {/* HEADER DE LA META */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center bg-darkpanel p-6 rounded-3xl border border-white/5 shadow-lg">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
-              <Target size={24} />
-            </div>
-            <h2 className="text-3xl font-[Satoshi-Bold] text-white">{goalData.title}</h2>
-          </div>
-          <p className="text-gray-400 max-w-xl">{goalData.description}</p>
+          <h2 className="text-3xl font-[Satoshi-Bold] text-white flex items-center gap-3">
+            <Target className="text-emerald-400" size={32} />
+            Metas de Ahorro
+          </h2>
+          <p className="text-gray-400 mt-1">Gestiona tus objetivos financieros a corto y largo plazo.</p>
         </div>
         
         <button 
-          onClick={handleAddSavings} 
-          disabled={isAdding || goalData.currentAmount >= goalData.targetAmount}
-          className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-black px-6 py-3 rounded-2xl font-bold transition-all cursor-pointer shadow-lg hover:shadow-emerald-500/20 flex items-center gap-2"
+          onClick={() => setShowForm(!showForm)}
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-lg cursor-pointer ${
+            showForm ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-emerald-500 text-black hover:bg-emerald-400'
+          }`}
         >
-          {isAdding ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : goalData.currentAmount >= goalData.targetAmount ? (
-            <Check size={20} />
-          ) : (
-            <Plus size={20} />
-          )}
-          {goalData.currentAmount >= goalData.targetAmount ? 'Meta Completada' : 'Añadir Ahorro'}
+          {showForm ? <><X size={20} /> Cancelar</> : <><Plus size={20} /> Añadir Meta</>}
         </button>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        
-        {/* PANEL PRINCIPAL: GRÁFICA Y PROGRESO */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* TARJETA DE GRÁFICA */}
-          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 relative overflow-hidden hover:border-white/10 transition-colors duration-300">
-            <div className="flex justify-between items-end mb-8">
+      {/* FORMULARIO DE NUEVA META (Condicional) */}
+      {showForm && (
+        <div className="bg-darkpanel border border-emerald-500/30 rounded-3xl p-8 shadow-2xl animate-in slide-in-from-top-4 duration-300">
+          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">Configurar Nueva Meta</h3>
+          <form onSubmit={handleCreateGoal} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div>
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Progreso Histórico</p>
-                <h3 className="text-2xl font-[Satoshi-Bold] text-white">Visualización de Meta</h3>
-              </div>
-              <div className="text-right">
-                <p className="text-emerald-400 font-bold text-xl">+{progressPercentage}%</p>
-                <p className="text-gray-500 text-xs">Crecimiento constante</p>
-              </div>
-            </div>
-
-            {/* GRÁFICA SVG */}
-            <div className="h-64 w-full relative">
-              <svg viewBox="0 0 1000 250" className="w-full h-full overflow-visible">
-                <defs>
-                  <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#22d3ee" />
-                  </linearGradient>
-                </defs>
-                <line x1="0" y1="0" x2="1000" y2="0" stroke="#ffffff05" strokeWidth="1" />
-                <line x1="0" y1="125" x2="1000" y2="125" stroke="#ffffff05" strokeWidth="1" />
-                <line x1="0" y1="250" x2="1000" y2="250" stroke="#ffffff10" strokeWidth="2" />
-                
-                {/* TODO: BACKEND - Para hacer esto dinámico, reemplazar por Recharts 
-                    o un generador de SVG basado en goalData.chartPoints */}
-                <path 
-                  d="M 0 250 L 250 210 L 500 175 L 750 140 L 1000 90" 
-                  fill="none" 
-                  stroke="url(#lineGrad)" 
-                  strokeWidth="5" 
-                  strokeLinecap="round"
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Nombre de la Meta</label>
+                <input 
+                  required type="text" placeholder="Ej. Viaje a la playa" 
+                  value={newGoal.title} onChange={e => setNewGoal({...newGoal, title: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50"
                 />
-                
-                <circle cx="0" cy="250" r="6" fill="#10b981" />
-                <circle cx="250" cy="210" r="6" fill="#10b981" />
-                <circle cx="500" cy="175" r="6" fill="#10b981" />
-                <circle cx="750" cy="140" r="6" fill="#10b981" />
-                <circle cx="1000" cy="90" r="8" fill="#22d3ee" className="animate-pulse" />
-              </svg>
-            </div>
-
-            {/* Inyección dinámica de las etiquetas de la gráfica desde el Backend */}
-            <div className="flex justify-between mt-4 text-xs font-bold text-gray-500 uppercase">
-              {goalData.chartLabels.length > 0 ? (
-                goalData.chartLabels.map((label, index) => (
-                  <span key={index}>{label}</span>
-                ))
-              ) : (
-                <><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span></>
-              )}
-            </div>
-          </div>
-
-          {/* BARRA DE PROGRESO DETALLADA */}
-          <div className="bg-zinc-900/20 border border-white/5 rounded-3xl p-8 hover:border-white/10 transition-colors duration-300">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-white font-medium">Estado del Objetivo</span>
-              <span className="text-gray-400 text-sm">{progressPercentage}% Completado</span>
-            </div>
-            
-            <div className="h-4 bg-white/5 rounded-full overflow-hidden mb-6">
-              <div 
-                className="h-full bg-linear-to-r from-emerald-500 to-cyan-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-1000 ease-out"
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Actual</p>
-                <p className="text-xl font-[Satoshi-Bold] text-white">${goalData.currentAmount.toLocaleString('es-MX')}</p>
               </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Objetivo</p>
-                <p className="text-xl font-[Satoshi-Bold] text-emerald-400">${goalData.targetAmount.toLocaleString('es-MX')}</p>
-              </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Restante</p>
-                <p className="text-xl font-[Satoshi-Bold] text-cyan-400">${remainingAmount.toLocaleString('es-MX')}</p>
-              </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-gray-500 text-xs mb-1 uppercase font-bold">Mensual Sug.</p>
-                <p className="text-xl font-[Satoshi-Bold] text-white">${goalData.monthlySuggestion.toLocaleString('es-MX')}</p>
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Descripción</label>
+                <textarea 
+                  placeholder="¿Para qué es este ahorro?" 
+                  value={newGoal.description} onChange={e => setNewGoal({...newGoal, description: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 h-24 resize-none"
+                />
               </div>
             </div>
-          </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Monto Objetivo ($)</label>
+                <input 
+                  required type="number" placeholder="0.00" 
+                  value={newGoal.targetAmount} onChange={e => setNewGoal({...newGoal, targetAmount: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Inicio</label>
+                  <input 
+                    required type="date" 
+                    value={newGoal.startDate} onChange={e => setNewGoal({...newGoal, startDate: e.target.value})}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none focus:border-emerald-500/50 scheme-dark"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Fin Esperado</label>
+                  <input 
+                    required type="date" 
+                    value={newGoal.endDate} onChange={e => setNewGoal({...newGoal, endDate: e.target.value})}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none focus:border-emerald-500/50 scheme-dark"
+                  />
+                </div>
+              </div>
+              <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3.5 rounded-xl transition-all mt-4">
+                Guardar Meta
+              </button>
+            </div>
+          </form>
         </div>
+      )}
 
-        {/* SIDEBAR: DETALLES Y FECHAS */}
-        <div className="space-y-6">
-          <div className="bg-darkpanel border border-white/5 rounded-3xl p-6 hover:border-white/10 transition-colors duration-300">
-            <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6 flex items-center gap-2">
-              <Calendar className="text-emerald-400" size={20} />
-              Cronograma de Meta
-            </h3>
-            
-            <div className="space-y-6 relative">
-              <div className="absolute left-4 top-2 bottom-2 w-px bg-white/10"></div>
-              
-              <div className="relative pl-10">
-                <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-darkbg"></div>
-                <p className="text-xs text-gray-500 uppercase font-bold">Fecha de Inicio</p>
-                <p className="text-white font-medium">{goalData.startDate}</p>
+      {/* TABLA DE METAS */}
+      <div className="bg-darkpanel rounded-3xl border border-white/5 shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-white/5 text-gray-400 text-xs font-bold uppercase tracking-wider">
+              <tr>
+                <th className="px-6 py-5">Objetivo</th>
+                <th className="px-6 py-5">Progreso Visual</th>
+                <th className="px-6 py-5">Monto Actual / Total</th>
+                <th className="px-6 py-5">Fechas</th>
+                <th className="px-6 py-5 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {goals.map((goal) => {
+                const progress = calculateProgress(goal.currentAmount, goal.targetAmount);
+                const isCompleted = goal.currentAmount >= goal.targetAmount;
+
+                return (
+                  // Si está completada, añadimos un fondo verde sutil, si no, el hover normal
+                  <tr key={goal.id} className={`transition-colors group ${isCompleted ? 'bg-emerald-500/10 ' : 'hover:bg-white/2'}`}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-white font-[Satoshi-Bold]">{goal.title}</p>
+                        {isCompleted && (
+                          <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 animate-in zoom-in duration-300">
+                            ¡Completada!
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-xs truncate max-w-50 ${isCompleted ? 'text-emerald-400/80 font-medium' : 'text-gray-500'}`}>
+                        {isCompleted ? "🎉 ¡Felicidades! Meta alcanzada." : goal.description}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 min-w-50">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-1000 ${isCompleted ? 'bg-emerald-400' : 'bg-[linear-gradient(to_right,#10b981,#22d3ee)]'}`}
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                        <span className={`text-xs font-bold ${isCompleted ? 'text-emerald-400' : 'text-gray-400'}`}>{progress}%</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className={`font-medium ${isCompleted ? 'text-emerald-400' : 'text-white'}`}>
+                        ${goal.currentAmount.toLocaleString('es-MX')}
+                      </p>
+                      <p className="text-gray-500 text-xs">de ${goal.targetAmount.toLocaleString('es-MX')}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col text-xs text-gray-400">
+                        <span className="flex items-center gap-1"><Calendar size={12}/> {goal.startDate}</span>
+                        <span className="flex items-center gap-1 mt-1"><Check size={12}/> {goal.endDate}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center items-center gap-2">
+                        <button 
+                          onClick={() => handleAddFunds(goal.id)}
+                          disabled={isCompleted}
+                          className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                            isCompleted 
+                            ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' 
+                            : 'border-white/10 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10'
+                          }`}
+                          title={isCompleted ? "Meta alcanzada" : "Añadir fondos"}
+                        >
+                          {isCompleted ? <Check size={18} /> : <Plus size={18} />}
+                        </button>
+                        
+                        {/* Botón para eliminar meta con el evento onClick conectado */}
+                        <button 
+                          onClick={() => handleDeleteGoal(goal.id)}
+                          className="p-2.5 rounded-xl border border-white/10 text-gray-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all cursor-pointer"
+                          title="Eliminar meta"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          
+          {goals.length === 0 && (
+            <div className="p-20 text-center">
+              <div className="inline-flex p-4 rounded-full bg-white/5 mb-4">
+                <Target size={40} className="text-gray-600" />
               </div>
-
-              <div className="relative pl-10">
-                <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-cyan-500 border-2 border-darkbg animate-pulse"></div>
-                <p className="text-xs text-gray-500 uppercase font-bold">Fecha Final Estimada</p>
-                <p className="text-white font-medium">{goalData.endDate}</p>
-              </div>
+              <p className="text-gray-400">Aún no tienes metas registradas.</p>
+              <button onClick={() => setShowForm(true)} className="text-emerald-400 font-bold hover:underline mt-2">Empieza creando tu primera meta</button>
             </div>
-
-            <div className="mt-8 p-4 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
-              <Info className="text-cyan-400 shrink-0" size={18} />
-              <p className="text-xs text-gray-400">
-                Basado en tu ritmo actual, alcanzarás tu meta antes de lo previsto. ¡Sigue así!
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6 hover:border-white/10 transition-colors duration-300">
-             <h3 className="text-lg font-[Satoshi-Bold] text-white mb-4">Consejo Financiero</h3>
-             <p className="text-sm text-gray-400 leading-relaxed italic">
-               "Automatiza tus ahorros el mismo día que recibas tus ingresos para evitar la tentación de gastarlos."
-             </p>
-             <button className="w-full mt-6 flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl text-white text-sm transition-all cursor-pointer">
-                Ver más tips de ahorro
-                <ChevronRight size={16} />
-             </button>
-          </div>
+          )}
         </div>
-
       </div>
+
+      {/* FOOTER TIPS */}
+      <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-6 flex items-start gap-4">
+        <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400">
+          <TrendingUp size={24} />
+        </div>
+        <div>
+          <h4 className="text-white font-[Satoshi-Bold]">Consejo de Ahorro</h4>
+          <p className="text-gray-400 text-sm mt-1">
+            "La mejor forma de alcanzar tus metas es automatizando un pequeño porcentaje de tus ingresos apenas los recibas. 
+            Incluso $100 semanales pueden marcar la diferencia al final del año."
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 };

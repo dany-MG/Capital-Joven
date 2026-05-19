@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, TrendingUp, PiggyBank, AlertTriangle, BookOpen, Target, Umbrella, Calculator, Plus, Trash2, ArrowRight, Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { format, addMonths } from 'date-fns'; // Importamos las herramientas de fechas
 
 export const TipsView = () => {
   // =====================================================================
@@ -63,7 +64,17 @@ export const TipsView = () => {
   const handleSetGoal = async () => {
     setIsSavingGoal(true);
 
-    // TODO: BACKEND - Petición POST para crear una nueva "Meta de Ahorro" con el monto ideal calculado.
+    // Cálculos de fecha automáticos
+    const today = new Date();
+    // Formato 'yyyy-MM-dd' estándar para bases de datos
+    const dbStartDate = format(today, 'yyyy-MM-dd'); 
+    const dbEndDate = format(addMonths(today, months), 'yyyy-MM-dd');
+
+    // Fechas formateadas para mostrarlas bonitas al usuario (dd/MM/yyyy)
+    const displayStartDate = format(today, 'dd/MM/yyyy');
+    const displayEndDate = format(addMonths(today, months), 'dd/MM/yyyy');
+
+    // TODO: BACKEND - Petición POST para crear una nueva "Meta de Ahorro" con fechas dinámicas
     /* Ejemplo real:
     try {
       const response = await fetch('/api/savings/goals', {
@@ -73,7 +84,9 @@ export const TipsView = () => {
           title: 'Fondo de Emergencia',
           description: `Fondo de seguridad para cubrir ${months} meses de gastos básicos.`,
           targetAmount: idealFund,
-          currentAmount: 0
+          currentAmount: 0,
+          startDate: dbStartDate, // Inyectamos la fecha calculada
+          endDate: dbEndDate      // Inyectamos el límite de 3 o 6 meses
         })
       });
 
@@ -95,7 +108,16 @@ export const TipsView = () => {
       
       Swal.fire({
           title: '¡Meta Establecida!',
-          html: `Tu fondo de emergencia ideal de <b>$${idealFund.toLocaleString('es-MX')}</b> ha sido guardado en tus Metas de Ahorro. <br/><br/> ¡Poco a poco llegarás al objetivo!`,
+          html: `
+            Tu fondo de emergencia de <b>$${idealFund.toLocaleString('es-MX')}</b> ha sido guardado en tus Metas de Ahorro.
+            <br/><br/>
+            <div style="font-size: 0.9em; text-align: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px;">
+              <b>Inicio:</b> ${displayStartDate}<br/>
+              <b>Objetivo final:</b> ${displayEndDate}
+            </div>
+            <br/>
+            ¡Poco a poco llegarás al objetivo!
+          `,
           icon: 'success',
           background: '#101010',
           color: '#ffffff', 
