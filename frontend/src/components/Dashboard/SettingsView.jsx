@@ -47,10 +47,10 @@ export const SettingsView = ({ initialUserData }) => {
     setPasswords(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validación de contraseñas desde el Frontend antes de molestar al Backend
+    // Tu validación de contraseñas de Frontend (Está perfecta, la dejamos intacta)
     if (passwords.new || passwords.current || passwords.confirm) {
       if (!passwords.current) {
         return Swal.fire({
@@ -72,49 +72,60 @@ export const SettingsView = ({ initialUserData }) => {
     setLoading(true);
     
     // TODO: BACKEND - Petición PUT/PATCH para actualizar el perfil
-    /* Si 'passwords.new' tiene contenido, el backend debe validar que 'passwords.current' 
-    coincida con el hash de la BD antes de encriptar y guardar la nueva.
+    const bodyData = {};
     
-    const payload = {
-      ...formData,
-      ...(passwords.new && { currentPassword: passwords.current, newPassword: passwords.new })
-    };
+    // Unimos firstName y lastName en una sola propiedad 'name' como pide tu Python
+    const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
+    if (fullName) bodyData.name = fullName;
+    
+    // Pasamos school a 'university' como pide tu Python
+    if (formData.school) bodyData.university = formData.school;
+    
+    // Si escribió una nueva contraseña en la sección de seguridad, la agregamos
+    if (passwords.new) bodyData.password = passwords.new;
 
     try {
-      const response = await fetch('/api/user/profile', {
+      // Tu endpoint real definido en user.py es: /user/update
+      const response = await fetch('http://localhost:8000/user/update', {
         method: 'PUT',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        credentials: 'include', // Permite enviar la cookie de sesión automática
+        body: JSON.stringify(bodyData)
       });
-      // Manejar respuesta...
-    } catch (error) { ... }
-    */
-
-    // Simulación Frontend
-    setTimeout(() => {
-      setLoading(false);
       
-      // Limpiar los campos de contraseña después de guardar exitosamente
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Error al actualizar los datos.");
+      }
+      
+      const updatedUser = await response.json();
+      console.log("Respuesta de MongoDB exitosa:", updatedUser);
+
+      // Limpiamos los campos de contraseña en la pantalla tras guardar con éxito
       setPasswords({ current: '', new: '', confirm: '' });
 
       Swal.fire({
         title: '¡Cambios Guardados!',
-        text: 'Tu información ha sido actualizada exitosamente.',
+        text: 'Tu información ha sido actualizada exitosamente en MongoDB.',
         icon: 'success',
-        background: '#101010',
-        color: '#ffffff',
-        confirmButtonColor: '#10b981',
-        confirmButtonText: 'Entendido',
-        timer : 3000,
-        backdrop: `rgba(0,0,0,0.6)`,
-        customClass: {
-          popup: 'border border-white/10 rounded-3xl shadow-2xl',
-          confirmButton: 'px-8 py-3 rounded-full font-bold text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300 hover:scale-105',
-        }
+        background: '#101010', color: '#ffffff', confirmButtonColor: '#10b981',
+        confirmButtonText: 'Entendido', timer : 3000
       });
-    }, 1500);
-  };
 
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        title: 'Error',
+        text: error.message || 'No se pudo guardar la configuración.',
+        icon: 'error',
+        background: '#101010', color: '#ffffff', confirmButtonColor: '#ef4444'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   // =====================================================================
   // 3. LÓGICA DE SUBIDA DE IMAGEN Y SESIÓN
   // =====================================================================
@@ -124,19 +135,46 @@ export const SettingsView = ({ initialUserData }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // TODO: BACKEND - Subir archivo a bucket/servidor
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, avatarUrl: reader.result }));
-    };
-    reader.readAsDataURL(file);
+    // Conexión para la subida de foto de perfil
+    const uploadData = new FormData();
+    uploadData.append('file', file); // Enviamos el archivo físico binario
+
+    try {
+      const response = await fetch('http://localhost:8000/user/avatar', {
+        method: 'POST',
+        credentials: 'include',
+        body: uploadData // Nota: NO se pone 'Content-Type', el navegador lo hace solo
+      });
+
+      if (!response.ok) throw new Error("Error al subir el archivo.");
+
+      const data = await response.json();
+      // Actualizamos la UI con la URL real de la foto que nos dé el servidor
+      setFormData(prev => ({ ...prev, avatarUrl: data.avatar_url }));
+      
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: 'Foto de perfil actualizada', showConfirmButton: false, timer: 3000,
+        background: '#101010', color: '#10b981'
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', 'No se pudo subir la imagen', 'error');
+    }
   };
 
-  const handleLogout = () => {
-    // TODO: BACKEND - Limpiar sesión
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:8000/user/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+    // Redirigimos al inicio de la página limpia
     window.location.href = '/';
   };
-
   // =====================================================================
   // 4. RENDERIZADO DE LA INTERFAZ
   // =====================================================================
@@ -177,7 +215,7 @@ export const SettingsView = ({ initialUserData }) => {
                   <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover group-hover/avatar:opacity-50 transition-opacity" />
                 ) : (
                   <span className="group-hover/avatar:opacity-50 transition-opacity">
-                    {formData.firstName?.[0] || ''}{formData.lastName?.[0] || ''}
+                    {formData.name[0] || ''}
                   </span>
                 )}
                 
@@ -195,7 +233,7 @@ export const SettingsView = ({ initialUserData }) => {
               </button>
             </div>
             
-            <h3 className="text-xl font-[Satoshi-Bold] text-white relative z-10">{formData.firstName} {formData.lastName}</h3>
+            <h3 className="text-xl font-[Satoshi-Bold] text-white relative z-10">{formData.name}</h3>
             <p className="text-gray-400 text-sm relative z-10">{formData.email}</p>
           </div>
 
@@ -227,7 +265,7 @@ export const SettingsView = ({ initialUserData }) => {
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
+                  <input type="text" name="firstName" value={formData.name || ''} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
                 </div>
               </div>
 
@@ -251,7 +289,7 @@ export const SettingsView = ({ initialUserData }) => {
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Escuela / Institución</label>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input type="text" name="school" value={formData.school} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
+                  <input type="text" name="school" value={formData.university} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
                 </div>
               </div>
             </div>
