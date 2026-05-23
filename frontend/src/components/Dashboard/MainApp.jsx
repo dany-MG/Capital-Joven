@@ -36,29 +36,26 @@ export const MainApp = () => {
   // 3. CONEXIÓN CON EL BACKEND (Carga inicial de datos)
   // =====================================================================
   useEffect(() => {
-    // TODO: BACKEND - Aquí se deben cargar el perfil del usuario y sus transacciones.
-    /* Ejemplo de implementación real usando axios o fetch:
-    Promise.all([
-      fetch('/api/user/profile').then(res => res.json()),
-      fetch('/api/transactions').then(res => res.json())
-    ])
-    .then(([userData, txData]) => {
-      setUserProfile(userData);
-      setTransactions(txData);
-      setIsLoading(false);
-    })
-    .catch(error => {
-      console.error("Error al cargar datos del backend:", error);
-      setIsLoading(false);
-    });
-    */
-
+    const cargarDatos = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/user/profile', { 
+          method: 'GET',
+          credentials: 'include'
+        });
+        if(!response.ok)
+          throw new Error("Ocurrió un error al cargar los datos del usuario");
+        const profileData = await response.json()
+        setUserProfile(profileData);
+        console.log(userProfile);
+        setTransactions(MOCK_TRANSACTIONS);
+      } catch(error) {
+        console.error("Ocurrió un error al cargar los datos del usuario: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
     // Simulación temporal (MOCK) para que el frontend siga siendo funcional
-    setTimeout(() => {
-      setUserProfile(MOCK_USER_PROFILE);
-      setTransactions(MOCK_TRANSACTIONS);
-      setIsLoading(false);
-    }, 1200); // 1.2 segundos de carga simulada
+    cargarDatos();
   }, []);
 
   // =====================================================================
@@ -172,7 +169,7 @@ export const MainApp = () => {
             <div className="relative" ref={userMenuRef}>
               <div onClick={showUserInfo} className="w-10 h-10 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-600/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300">
                 {/* Fallback inicial de avatar en el botón */}
-                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstName[0]}{userProfile.lastName[0]}</span>
+                <span className="font-[Satoshi-Bold] text-sm">{userProfile.name[0]}</span>
               </div>
 
               {showUserMenu && (
@@ -191,7 +188,7 @@ export const MainApp = () => {
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement.innerHTML = `<span class="text-emerald-400 text-2xl font-[Satoshi-Bold]">${userProfile.firstName[0]}${userProfile.lastName[0]}</span>`;
+                              e.currentTarget.parentElement.innerHTML = `<span class="text-emerald-400 text-2xl font-[Satoshi-Bold]">${userProfile.name}</span>`;
                             }}
                           />
                         </div>
@@ -201,13 +198,13 @@ export const MainApp = () => {
                       <div className="text-center relative z-10">
                         {/* INYECCIÓN DE DATOS DEL ESTADO */}
                         <p className="font-[Satoshi-Bold] text-white text-xl leading-tight">
-                          {userProfile.firstName} {userProfile.lastName}
+                          {userProfile.name}
                         </p>
                         <p className="text-gray-500 text-sm mt-1">{userProfile.email}</p>
                         
                         <div className="mt-4 px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl">
                           <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest">
-                            {userProfile.school}
+                            {userProfile.university}
                           </p>
                         </div>
                       </div>
