@@ -238,6 +238,7 @@ import AuthInput from '../elements/AuthInput.astro';
 
       const data = new FormData(form);
       const name = String(data.get('name') || '').trim();
+      const lastname = String(data.get('lastname') || '').trim();
       const email = String(data.get('email') || '').trim();
       const university = String(data.get('university') || '').trim();
       const password = String(data.get('password') || '');
@@ -246,10 +247,16 @@ import AuthInput from '../elements/AuthInput.astro';
 
       let valid = true;
       const nameInput = form.querySelector<HTMLInputElement>('#name')!;
+      const lastnameInput = form.querySelector<HTMLInputElement>('#lastname')!;
       const emailInput = form.querySelector<HTMLInputElement>('#email')!;
 
       if (name.length < 3) {
-        showFieldError(nameInput, 'Ingresa tu nombre completo');
+        showFieldError(nameInput, 'Ingresa tu(s) nombre(s) completo(s)');
+        valid = false;
+      }
+
+      if (lastname.length < 3) {
+        showFieldError(lastnameInput, 'Ingresa tu(s) apellido(s) completo(s)');
         valid = false;
       }
 
