@@ -205,7 +205,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
           
           <button 
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-darkbg px-4 py-2 rounded-xl transition-colors duration-300 font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20 cursor-pointer"
+            className="flex items-center gap-2 bg-emerald-500 text-black hover:bg-emerald-400 px-4 py-2 rounded-xl transition-colors duration-300 font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20 cursor-pointer"
           >
             <Plus size={18} />
             <span className="hidden sm:inline">Nueva</span>
@@ -217,7 +217,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-emerald-500/5 border border-emerald-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-emerald-500/10 transition-colors duration-300">
           <div>
-            <p className="text-sm text-emerald-400 font-medium mb-1">Ingresos de {format(currentMonth, 'MMM', { locale: es })}</p>
+            <p className="text-md text-emerald-400 font-medium mb-1">Ingresos de {format(currentMonth, 'MMM', { locale: es })}</p>
             <p className="text-2xl font-[Satoshi-Bold] text-emerald-400">+${totals.income.toLocaleString('es-MX', {minimumFractionDigits: 2})}</p>
           </div>
           <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform">
@@ -227,7 +227,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
 
         <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-red-500/10 transition-colors duration-300">
           <div>
-            <p className="text-sm text-red-400 font-medium mb-1">Gastos de {format(currentMonth, 'MMM', { locale: es })}</p>
+            <p className="text-md text-red-400 font-medium mb-1">Gastos de {format(currentMonth, 'MMM', { locale: es })}</p>
             <p className="text-2xl font-[Satoshi-Bold] text-red-400">-${totals.expense.toLocaleString('es-MX', {minimumFractionDigits: 2})}</p>
           </div>
           <div className="p-3 bg-red-500/20 rounded-xl text-red-400 group-hover:scale-110 transition-transform">
@@ -237,7 +237,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
 
         <div className="bg-cyan-500/5 border border-cyan-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-cyan-500/10 transition-colors duration-300">
           <div>
-            <p className="text-sm text-cyan-400 font-medium mb-1">Balance Mensual</p>
+            <p className="text-md text-cyan-400 font-medium mb-1">Balance Mensual</p>
             <p className={`text-2xl font-[Satoshi-Bold] ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {balance >= 0 ? '+' : ''}${balance.toLocaleString('es-MX', {minimumFractionDigits: 2})}
             </p>
@@ -482,7 +482,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
                   className={`w-full flex justify-center items-center gap-2 font-bold py-3 px-4 rounded-xl transition-all duration-300 transform shadow-[0_0_15px_rgba(16,185,129,0.3)] cursor-pointer ${
                     isSubmitting 
                       ? 'bg-emerald-500/50 text-darkbg cursor-wait' 
-                      : 'bg-emerald-500 hover:bg-emerald-400 text-darkbg hover:-translate-y-1'
+                      : 'bg-emerald-500 text-black hover:bg-emerald-400 hover:-translate-y-1'
                   }`}
                 >
                   {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : null}

@@ -15,14 +15,14 @@ const StatsCard = ({ title, value, trend, isPositive, icon: Icon, colorType }) =
         <Icon size={80} />
       </div>
       
-      <p className="text-sm font-medium text-gray-400 mb-2 relative z-10">{title}</p>
+      <p className="text-md font-medium text-gray-400 mb-2 relative z-10">{title}</p>
       <h3 className="text-3xl font-[Satoshi-Bold] text-white relative z-10 mb-3">${value.toLocaleString('es-MX')}</h3>
       
       <div className="flex items-center gap-2 relative z-10">
         <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
           {isPositive ? '+' : ''}{trend}%
         </span>
-        <span className="text-xs text-gray-500">vs mes anterior</span>
+        <span className="text-sm text-gray-500">vs mes anterior</span>
       </div>
     </div>
   );
@@ -153,7 +153,7 @@ export const HomeView = () => {
           <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-105 flex flex-col group hover:border-white/10 transition-colors duration-300">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-1.5 h-6 bg-emerald-400 rounded-full"></div>
-              <h3 className="text-lg font-[Satoshi-Bold] text-white">Tendencia de Gastos vs Predicción</h3>
+              <h3 className="text-xl font-[Satoshi-Bold] text-white">Tendencia de Gastos vs Predicción</h3>
             </div>
             
             <div className="flex justify-center gap-6 mb-4">
@@ -194,7 +194,7 @@ export const HomeView = () => {
           {/* TRANSACCIONES RECIENTES */}
           <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 hover:border-white/10 transition-colors duration-300">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-[Satoshi-Bold] text-white">Transacciones Recientes</h3>
+              <h3 className="text-xl font-[Satoshi-Bold] text-white">Transacciones Recientes</h3>
               {/* TODO: BACKEND - Conectar este botón para cambiar de vista a TransactionsView */}
               <button className="text-emerald-400 text-sm font-medium hover:underline cursor-pointer">Ver Todo</button>
             </div>
@@ -238,7 +238,7 @@ export const HomeView = () => {
             </div>
             <div className="space-y-4 mb-6">
               <div className="flex justify-between items-end">
-                <span className="text-sm text-gray-400">Gasto Actual</span>
+                <span className="text-md text-gray-400">Gasto Actual</span>
                 <span className="font-[Satoshi-Bold] text-white">${metrics.prediccionGastoActual.toLocaleString('es-MX')}</span>
               </div>
               <div className="flex justify-between items-end">
@@ -268,10 +268,10 @@ export const HomeView = () => {
               <Wallet size={80} />
             </div>
             <h3 className="text-xl font-[Satoshi-Bold] text-white mb-2 relative z-10">Meta de Ahorro</h3>
-            <p className="text-emerald-400 text-sm mb-6 relative z-10">{metrics.metaAhorroNombre || "Sin meta activa"}</p>
+            <p className="text-emerald-400 text-md mb-6 relative z-10">{metrics.metaAhorroNombre || "Sin meta activa"}</p>
             <div className="flex justify-between items-end mb-3 relative z-10">
               <span className="text-3xl font-bold text-white">${metrics.metaAhorroActual.toLocaleString('es-MX')}</span>
-              <span className="text-sm text-gray-400">de ${metrics.metaAhorroObjetivo.toLocaleString('es-MX')}</span>
+              <span className="text-md text-gray-400">de ${metrics.metaAhorroObjetivo.toLocaleString('es-MX')}</span>
             </div>
             <div className="w-full bg-black/40 h-2.5 rounded-full overflow-hidden relative z-10">
               <div className="bg-[linear-gradient(to_right,#34d399,#22d3ee)] h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" style={{ width: `${metaAhorroPorcentaje}%` }}></div>
@@ -286,8 +286,8 @@ export const HomeView = () => {
               </div>
             </div>
             {/* TODO: BACKEND - Podrían inyectar un tip aleatorio distinto cada día */}
-            <h4 className="font-[Satoshi-Bold] text-white mb-2">Evita Deudas Hormiga</h4>
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <h4 className="font-[Satoshi-Bold] text-white mb-2 text-xl">Evita Deudas Hormiga</h4>
+            <p className="text-md text-gray-400 leading-relaxed">
               Registra cada pequeño gasto. Ese café diario suma más de $900 al mes. ¡Mantén el control!
             </p>
           </div>

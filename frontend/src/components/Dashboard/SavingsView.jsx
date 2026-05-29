@@ -253,7 +253,7 @@ export const SavingView = () => {
       <div className="bg-darkpanel rounded-3xl border border-white/5 shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-white/5 text-gray-400 text-xs font-bold uppercase tracking-wider">
+            <thead className="bg-white/5 text-gray-400 text-sm font-bold uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-5">Objetivo</th>
                 <th className="px-6 py-5">Progreso Visual</th>
@@ -274,12 +274,12 @@ export const SavingView = () => {
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-white font-[Satoshi-Bold]">{goal.title}</p>
                         {isCompleted && (
-                          <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 animate-in zoom-in duration-300">
+                          <span className="bg-emerald-500/20 text-emerald-400 text-sm px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 animate-in zoom-in duration-300">
                             ¡Completada!
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs truncate max-w-50 ${isCompleted ? 'text-emerald-400/80 font-medium' : 'text-gray-500'}`}>
+                      <p className={`text-sm max-w-fit ${isCompleted ? 'text-emerald-400/80 font-medium' : 'text-gray-500'}`}>
                         {isCompleted ? "🎉 ¡Felicidades! Meta alcanzada." : goal.description}
                       </p>
                     </td>
@@ -291,7 +291,7 @@ export const SavingView = () => {
                             style={{ width: `${progress}%` }}
                           ></div>
                         </div>
-                        <span className={`text-xs font-bold ${isCompleted ? 'text-emerald-400' : 'text-gray-400'}`}>{progress}%</span>
+                        <span className={`text-sm font-bold ${isCompleted ? 'text-emerald-400' : 'text-gray-400'}`}>{progress}%</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -301,7 +301,7 @@ export const SavingView = () => {
                       <p className="text-gray-500 text-xs">de ${goal.targetAmount.toLocaleString('es-MX')}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col text-xs text-gray-400">
+                      <div className="flex flex-col text-sm text-gray-400">
                         <span className="flex items-center gap-1"><Calendar size={12}/> {goal.startDate}</span>
                         <span className="flex items-center gap-1 mt-1"><Check size={12}/> {goal.endDate}</span>
                       </div>
@@ -355,8 +355,8 @@ export const SavingView = () => {
           <TrendingUp size={24} />
         </div>
         <div>
-          <h4 className="text-white font-[Satoshi-Bold]">Consejo de Ahorro</h4>
-          <p className="text-gray-400 text-sm mt-1">
+          <h4 className="text-white font-[Satoshi-Bold] text-xl">Consejo de Ahorro</h4>
+          <p className="text-gray-400 text-md mt-1">
             "La mejor forma de alcanzar tus metas es automatizando un pequeño porcentaje de tus ingresos apenas los recibas. 
             Incluso $100 semanales pueden marcar la diferencia al final del año."
           </p>

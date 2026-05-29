@@ -149,24 +149,24 @@ export const AnalysisView = ({ transactions = [] }) => {
             <Target className="text-emerald-400" />
             Predicción de Cierre de Mes
           </h2>
-          <p className="text-sm text-gray-400 mt-1">Basado en tu comportamiento hasta el {format(analysisDate, "d 'de' MMMM", { locale: es })}</p>
+          <p className="text-md text-gray-400 mt-1">Basado en tu comportamiento hasta el {format(analysisDate, "d 'de' MMMM", { locale: es })}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5">
           <div className="p-6">
-            <p className="text-sm font-medium text-gray-400 mb-2">Gasto Actual</p>
+            <p className="text-md font-medium text-gray-400 mb-2">Gasto Actual</p>
             <h3 className="text-3xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent.toFixed(0)}</h3>
             <div className="mt-4 w-full bg-white/10 h-2 rounded-full overflow-hidden">
               <div className="bg-linear-to-r from-emerald-400 to-cyan-400 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" style={{ width: `${Math.min((predictionStats.currentSpent / (budget || 1)) * 100, 100)}%` }}></div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 mt-2">
               {budget > 0 ? ((predictionStats.currentSpent / budget) * 100).toFixed(1) : 0}% del presupuesto
             </p>
           </div>
 
           <div className="p-6 bg-white/5 relative overflow-hidden group">
             <div className={`absolute inset-0 opacity-10 transition-opacity duration-500 ${predictionStats.isOverBudget ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
-            <p className="text-sm font-medium text-gray-400 mb-2 relative z-10">Proyección a Fin de Mes</p>
+            <p className="text-md font-medium text-gray-400 mb-2 relative z-10">Proyección a Fin de Mes</p>
             <h3 className={`text-3xl font-[Satoshi-Bold] relative z-10 ${predictionStats.isOverBudget ? 'text-red-400' : 'text-emerald-400'}`}>
               ${predictionStats.projectedTotal.toFixed(0)}
             </h3>
@@ -187,7 +187,7 @@ export const AnalysisView = ({ transactions = [] }) => {
 
           {/* TARJETA 3: PRESUPUESTO EDITABLE */}
           <div className="p-6">
-            <p className="text-sm font-medium text-gray-400 mb-2">Presupuesto Definido</p>
+            <p className="text-md font-medium text-gray-400 mb-2">Presupuesto Definido</p>
             
             {/* Animación de carga si aún no llega el presupuesto del Backend */}
             {isLoadingBudget ? (
@@ -236,7 +236,7 @@ export const AnalysisView = ({ transactions = [] }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-100 flex flex-col group hover:border-emerald-500/30 transition-colors duration-300">
-          <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6">Flujo de Caja Diario</h3>
+          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">Flujo de Caja Diario</h3>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -253,7 +253,7 @@ export const AnalysisView = ({ transactions = [] }) => {
         </div>
 
         <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-100 flex flex-col group hover:border-cyan-500/30 transition-colors duration-300">
-          <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6">Distribución de Gastos</h3>
+          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">Distribución de Gastos</h3>
           <div className="flex-1 w-full min-h-0 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

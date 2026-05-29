@@ -197,8 +197,8 @@ export const AssesorView = () => {
             <BrainCircuit className="text-black" size={20} />
           </div>
           <div>
-            <h2 className="text-white font-[Satoshi-Bold]">Asesor Financiero IA</h2>
-            <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+            <h2 className="text-white font-[Satoshi-Bold] text-xl">Asesor Financiero IA</h2>
+            <div className="flex items-center gap-1.5 text-sm text-emerald-400 font-bold uppercase tracking-wider">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
               Contexto Activo: Ingresos, Gastos y Metas
             </div>
@@ -229,14 +229,14 @@ export const AssesorView = () => {
 
                 {/* Burbuja */}
                 <div className="space-y-1">
-                  <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                  <div className={`p-4 rounded-2xl text-md leading-relaxed ${
                     msg.role === 'ai' 
                       ? 'bg-[#101010] border border-white/5 text-gray-200' 
                       : 'bg-[linear-gradient(to_right,#34d399,#22d3ee)] text-black font-medium shadow-lg'
                   }`}>
                     {msg.text}
                   </div>
-                  <p className={`text-[10px] text-gray-500 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                  <p className={`text-sm text-gray-500 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                     {msg.timestamp}
                   </p>
                 </div>
@@ -247,7 +247,7 @@ export const AssesorView = () => {
           {/* Indicador de escritura */}
           {isTyping && (
             <div className="flex justify-start animate-pulse">
-              <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full text-xs text-emerald-400 flex items-center gap-2">
+              <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full text-md text-emerald-400 flex items-center gap-2">
                 <Sparkles size={12} /> El asesor está analizando tus datos...
               </div>
             </div>
@@ -264,7 +264,7 @@ export const AssesorView = () => {
             <button 
               key={i}
               onClick={() => setInputValue(s)}
-              className="whitespace-nowrap px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all cursor-pointer"
+              className="whitespace-nowrap px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[13px] text-gray-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all cursor-pointer"
             >
               {s}
             </button>
@@ -289,7 +289,7 @@ export const AssesorView = () => {
           </button>
         </form>
 
-        <p className="text-[12px] text-center text-white/30 flex items-center justify-center gap-1">
+        <p className="text-sm text-center text-white/30 flex items-center justify-center gap-1">
           <Info size={15} /> Recuerda que soy una IA. Verifica siempre tus decisiones financieras importantes.
         </p>
       </div>
