@@ -14,6 +14,7 @@ const getCategoryIcon = (category) => {
   if (lowerCat.includes('servicios') || lowerCat.includes('utilities')) return Zap;
   if (lowerCat.includes('transporte') || lowerCat.includes('transport')) return Car;
   if (lowerCat.includes('salario') || lowerCat.includes('salary')) return Wallet;
+  if(lowerCat.includes('beca') || lowerCat.includes('scholarship')) return Wallet;
   if (lowerCat.includes('freelance') || lowerCat.includes('project')) return Briefcase;
   if (lowerCat.includes('salud') || lowerCat.includes('health')) return HeartPulse;
   if (lowerCat.includes('entretenimiento') || lowerCat.includes('entertainment')) return Film;
@@ -507,6 +508,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
                     ) : (
                       <>
                         <option value="Salario" className='bg-zinc-900'>Salario</option>
+                        <option value="Beca" className='bg-zinc-900'>Beca</option>
                         <option value="Freelance" className='bg-zinc-900'>Freelance</option>
                         <option value="Inversiones" className='bg-zinc-900'>Inversiones</option>
                         <option value="Otros" className='bg-zinc-900'>Otros</option>
