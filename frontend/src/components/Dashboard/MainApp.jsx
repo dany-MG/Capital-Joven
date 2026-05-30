@@ -25,6 +25,7 @@ export const MainApp = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  
 
   // =====================================================================
   // 2. REFERENCIAS (DOM & GSAP)
@@ -103,6 +104,18 @@ export const MainApp = () => {
       const transaction = { ...newTx, id: Math.random().toString(36).substr(2, 9) };
       setTransactions(prev => [transaction, ...prev]);
     }
+  };
+
+  const handleUpdateTransaction = (updatedTransaction) => {
+    setTransactions(prev => 
+      prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+    );
+  };
+
+  const handleDeleteTransaction = (idToDelete) => {
+    setTransactions(prev => 
+      prev.filter(t => t.id !== idToDelete)
+    );
   };
 
   const showUserInfo = () => setShowUserMenu(!showUserMenu);
@@ -250,7 +263,9 @@ export const MainApp = () => {
             {activeTab === 'settings' && <SettingsView initialUserData={userProfile} />}
             
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
-            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
+            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction} 
+                                                                                                                                         onUpdateTransaction={handleUpdateTransaction} 
+                                                                                                                                         onDeleteTransaction={handleDeleteTransaction} />}
             {activeTab === 'goals' && <SavingView />}
             {activeTab === 'aiAssesor' && <AssesorView />}
           </div>
