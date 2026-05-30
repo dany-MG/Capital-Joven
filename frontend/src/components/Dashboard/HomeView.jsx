@@ -28,7 +28,7 @@ const StatsCard = ({ title, value, trend, isPositive, icon: Icon, colorType }) =
   );
 };
 
-export const HomeView = () => {
+export const HomeView = ({onNavigateToTransactions}) => {
   // =====================================================================
   // 1. ESTADOS LOCALES PARA EL BACKEND
   // =====================================================================
@@ -196,7 +196,7 @@ export const HomeView = () => {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-[Satoshi-Bold] text-white">Transacciones Recientes</h3>
               {/* TODO: BACKEND - Conectar este botón para cambiar de vista a TransactionsView */}
-              <button className="text-emerald-400 text-sm font-medium hover:underline cursor-pointer">Ver Todo</button>
+              <button className="text-emerald-400 text-sm font-medium hover:underline cursor-pointer" onClick={onNavigateToTransactions}>Ver Todo</button>
             </div>
             <div className="space-y-4">
               {recentTransactions.length > 0 ? recentTransactions.map((tx) => (
@@ -207,7 +207,7 @@ export const HomeView = () => {
                     </div>
                     <div>
                       <h4 className="font-[Satoshi-Bold] text-white">{tx.title}</h4>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-0.5">
                         <span>{tx.category}</span>
                         <span>•</span>
                         <span>{tx.date}</span>

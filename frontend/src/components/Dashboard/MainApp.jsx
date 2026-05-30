@@ -163,25 +163,20 @@ export const MainApp = () => {
             
             <div>
               <h2 className="text-xl md:text-2xl font-[Satoshi-Bold] text-white">
-                {activeTab === 'dashboard' && 'Resumen Financiero'}
-                {activeTab === 'tips' && 'Educación Financiera'}
+                {activeTab === 'dashboard' && 'Tus Finanzas'}
+                {activeTab === 'tips' && 'Tips Financieros'}
                 {activeTab === 'settings' && 'Configuración'}
-                {activeTab === 'analysis' && 'Análisis Financiero'}
-                {activeTab === 'transactions' && 'Ingresos y Egresos'}
-                {activeTab === 'goals' && 'Ahorros y Metas'}
-                {activeTab === 'aiAssesor' && 'Asesor IA'}
+                {activeTab === 'analysis' && 'Analicemos tus Finanzas'}
+                {activeTab === 'transactions' && 'Tus Movimientos'}
+                {activeTab === 'goals' && 'Tus Metas de Ahorro'}
+                {activeTab === 'aiAssesor' && 'Tu Asesor IA'}
               </h2>
               {/* Ocultamos el subtítulo en móviles para ahorrar espacio en la barra superior */}
-              <p className="text-gray-400 text-sm mt-1 hidden md:block">Panel de Control</p>
+
             </div>
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
-            <button className="relative p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-            </button>
-            
             <div className="relative" ref={userMenuRef}>
               <div onClick={showUserInfo} className="w-10 h-10 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-600/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300">
                 {/* Fallback inicial de avatar en el botón */}
@@ -254,7 +249,7 @@ export const MainApp = () => {
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'dashboard' && (
               <div className="animate-in fade-in duration-500">
-                <HomeView />
+                <HomeView onNavigateToTransactions={() => setActiveTab('transactions')} />
               </div>
             )}
             {activeTab === 'tips' && <TipsView />}
