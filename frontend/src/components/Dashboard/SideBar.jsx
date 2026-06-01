@@ -90,12 +90,12 @@ export default function SideBar({ activeTab, setActiveTab, userProfile, isOpen, 
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                         e.currentTarget.style.display = 'none';
-                                        e.currentTarget.parentElement.innerHTML = `<span class="font-[Satoshi-Bold] text-sm">${userProfile?.name?.[0] || ''}</span>`;
+                                        e.currentTarget.parentElement.innerHTML = `<span class="font-[Satoshi-Bold] text-sm">${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}</span>`;
                                     }}
                                 />
                             ) : (
                                 <span className="font-[Satoshi-Bold] text-sm">
-                                    {userProfile?.name?.[0] || ''}
+                                    {userProfile?.firstname?.[0] || ''}{userProfile?.lastname?.[0] || ''}
                                 </span>
                             )}
                         </div>
@@ -103,7 +103,7 @@ export default function SideBar({ activeTab, setActiveTab, userProfile, isOpen, 
                         {/* INYECCIÓN DE DATOS */}
                         <div className="overflow-hidden">
                             <p className="font-[Satoshi-Medium] text-white truncate">
-                                {userProfile ? `${userProfile.name}` : 'Cargando...'}
+                                {userProfile ? `${userProfile.firstname} ${userProfile.lastname}` : 'Cargando...'}
                             </p>
                             <p className="text-xs text-gray-500 truncate">
                                 {userProfile?.university || 'Estudiante'}
