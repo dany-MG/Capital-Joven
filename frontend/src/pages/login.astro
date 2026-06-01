@@ -165,17 +165,19 @@ import AuthInput from '../elements/AuthInput.astro';
       submitBtn.querySelector('.btn-loader')?.classList.remove('hidden');
 
       try {
-        // TODO: reemplazar por tu endpoint real
-        // const res = await fetch('/api/auth/login', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ email, password }),
-        // });
-        // if (!res.ok) throw new Error('Credenciales inválidas');
-        // const { token } = await res.json();
-        // localStorage.setItem('cj_token', token);
-
-        await new Promise((r) => setTimeout(r, 900)); // simulación
+        const API_URL = "http://localhost:8000";
+        const response = await fetch(`${API_URL}/user/login`, {
+          method: "POST",
+          credentials: "include",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({email, password})
+        });
+        if(!response.ok)
+        {
+          const error = await response.json();
+          throw new Error(error.detail || "Error al iniciar sesión");
+        }
+        await response.json();
         window.location.href = '/dashboard';
       } catch (err) {
         formError.textContent = (err as Error).message || 'Ocurrió un error, intenta de nuevo';
