@@ -32,9 +32,22 @@ import AuthInput from '../elements/AuthInput.astro';
           type="text"
           id="name"
           name="name"
-          label="Nombre completo"
-          placeholder="Juan Pérez"
+          label="Nombre(s) completo(s)"
+          placeholder="Juan"
           autocomplete="name"
+          icon="user"
+          required
+        />
+      </div>
+
+      <div class="auth-item">
+        <AuthInput
+          type="text"
+          id="lastname"
+          name="lastname"
+          label="Apellido(s) completo(s)"
+          placeholder="Pérez"
+          autocomplete="family-name"
           icon="user"
           required
         />
