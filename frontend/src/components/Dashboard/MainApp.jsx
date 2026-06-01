@@ -36,82 +36,34 @@ export const MainApp = () => {
   // 3. CONEXIÓN CON EL BACKEND (Carga inicial de datos)
   // =====================================================================
   useEffect(() => {
-    const cargardatos = async () => {
-      try {
-        setIsLoading(true);
-        
-        const options = {method: 'GET', credentials: 'include'};
-        
-        const [perfilRes, billsRes, incomesRes] = await Promise.all([
-          fetch('http://localhost:8000/user/profile', options),
-          fetch('http://localhost:8000/bill/', options),
-          fetch('http://localhost:8000/income/', options)
-        ]);
+    // TODO: BACKEND - Aquí se deben cargar el perfil del usuario y sus transacciones.
+    /* Ejemplo de implementación real usando axios o fetch:
+    Promise.all([
+      fetch('/api/user/profile').then(res => res.json()),
+      fetch('/api/transactions').then(res => res.json())
+    ])
+    .then(([userData, txData]) => {
+      setUserProfile(userData);
+      setTransactions(txData);
+      setIsLoading(false);
+    })
+    .catch(error => {
+      console.error("Error al cargar datos del backend:", error);
+      setIsLoading(false);
+    });
+    */
 
-        if (!perfilRes.ok) {
-          window.location.href = '/login';
-          return;
-        }
-
-        const perfilData = await perfilRes.json();
-        
-        setUserProfile({
-          firstname: perfilData.firstname || '',
-          lastname: perfilData.lastname || '',
-          email: perfilData.email || '',
-          university: perfilData.university || 'Sin institución', 
-          avatarUrl: perfilData.avatarUrl || ''
-        });
-
-        // Procesamos los Gastos (Bills) e inyectamos el 'type' de forma implícita
-        let dbTransactions = [];
-
-        if (billsRes.ok) {
-          const billsData = await billsRes.json();
-          dbTransactions = dbTransactions.concat(
-            billsData.map(b => ({
-              id: b.bill_id || b.id || b._id,
-              date: b.date || new Date().toISOString(), // Fallback si la proyección no da fecha
-              category: b.category || 'Otros',
-              description: b.title || b.description,
-              amount: parseFloat(b.amount) || 0,
-              type: 'expense'
-            }))
-          );
-        }
-
-        // Procesamos los Ingresos (Incomes)
-        if (incomesRes.ok) {
-          const incomesData = await incomesRes.json();
-          dbTransactions = dbTransactions.concat(
-            incomesData.map(i => ({
-              id: i.income_id || i.id || i._id,
-              date: i.date || new Date().toISOString(), // Fallback seguro
-              category: i.origin || 'Otros',
-              description: i.title || i.description,
-              amount: parseFloat(i.amount) || 0,
-              type: 'income'
-            }))
-          );
-        }
-
-        setTransactions(dbTransactions);
-
-      } catch (error) {
-        console.error("Error al conectar con el servidor de Capital Joven:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    cargardatos();
+    // Simulación temporal (MOCK) para que el frontend siga siendo funcional
+    setTimeout(() => {
+      setUserProfile(MOCK_USER_PROFILE);
+      setTransactions(MOCK_TRANSACTIONS);
+      setIsLoading(false);
+    }, 1200); // 1.2 segundos de carga simulada
   }, []);
 
   // =====================================================================
   // 4. LÓGICA DE INTERFAZ Y EVENTOS
   // =====================================================================
-  
-
   
   // Cierre del menú de usuario al dar clic afuera
   useEffect(() => {
@@ -139,25 +91,22 @@ export const MainApp = () => {
     return () => ctx.revert(); 
   }, [isLoading]);
 
-// Agrega la nueva transacción al inicio de la lista en tiempo real
   const handleAddTransaction = (newTx) => {
-    setTransactions(prev => [newTx, ...prev]);
-  };
-
-  // 🌟 NUEVO: Modifica la transacción existente dentro del estado sin recargar
-  const handleUpdateTransaction = (updatedTx) => {
-    setTransactions(prev => 
-      prev.map(t => (t.id === updatedTx.id ? { ...t, ...updatedTx } : t))
-    );
-  };
-
-  // 🌟 NUEVO: Remueve la transacción eliminada del estado al instante
-  const handleDeleteTransaction = (id) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+    // TODO: BACKEND - Reemplazar por un POST a la base de datos si deciden no hacerlo directamente en TransactionsView.
+    if (Array.isArray(newTx)) {
+      const newTransactions = newTx.map(tx => ({
+        ...tx,
+        id: Math.random().toString(36).substr(2, 9),
+      }));
+      setTransactions(prev => [...newTransactions, ...prev]);
+    } else {
+      const transaction = { ...newTx, id: Math.random().toString(36).substr(2, 9) };
+      setTransactions(prev => [transaction, ...prev]);
+    }
   };
 
   const showUserInfo = () => setShowUserMenu(!showUserMenu);
-  
+
   // =====================================================================
   // 5. PANTALLA DE CARGA (Loading Screen)
   // =====================================================================
@@ -203,7 +152,7 @@ export const MainApp = () => {
               <h2 className="text-xl md:text-2xl font-[Satoshi-Bold] text-white">
                 {activeTab === 'dashboard' && 'Resumen Financiero'}
                 {activeTab === 'tips' && 'Educación Financiera'}
-                {activeTab === 'settings' && 'Configuración de Perfil'}
+                {activeTab === 'settings' && 'Configuración'}
                 {activeTab === 'analysis' && 'Análisis Financiero'}
                 {activeTab === 'transactions' && 'Ingresos y Egresos'}
                 {activeTab === 'goals' && 'Ahorros y Metas'}
@@ -223,7 +172,7 @@ export const MainApp = () => {
             <div className="relative" ref={userMenuRef}>
               <div onClick={showUserInfo} className="w-10 h-10 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-600/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300">
                 {/* Fallback inicial de avatar en el botón */}
-                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstname?.[0] || ''}{userProfile.lastname?.[0] || ''}</span>
+                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstName[0]}{userProfile.lastName[0]}</span>
               </div>
 
               {showUserMenu && (
@@ -242,7 +191,7 @@ export const MainApp = () => {
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement.innerHTML = `<span class="text-emerald-400 text-2xl font-[Satoshi-Bold]">${userProfile.firstname?.[0] || ''}{userProfile.lastname?.[0] || ''}</span>`;
+                              e.currentTarget.parentElement.innerHTML = `<span class="text-emerald-400 text-2xl font-[Satoshi-Bold]">${userProfile.firstName[0]}${userProfile.lastName[0]}</span>`;
                             }}
                           />
                         </div>
@@ -252,13 +201,13 @@ export const MainApp = () => {
                       <div className="text-center relative z-10">
                         {/* INYECCIÓN DE DATOS DEL ESTADO */}
                         <p className="font-[Satoshi-Bold] text-white text-xl leading-tight">
-                          {userProfile.firstname} {userProfile.lastname}
+                          {userProfile.firstName} {userProfile.lastName}
                         </p>
                         <p className="text-gray-500 text-sm mt-1">{userProfile.email}</p>
                         
                         <div className="mt-4 px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl">
                           <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest">
-                            {userProfile.university}
+                            {userProfile.school}
                           </p>
                         </div>
                       </div>
@@ -298,11 +247,10 @@ export const MainApp = () => {
             {activeTab === 'tips' && <TipsView />}
             
             {/* Ahora le pasamos el userProfile real a SettingsView para que lo editen */}
-            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} onProfileUpdate={setUserProfile} />}
+            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} />}
             
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
-            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}onUpdateTransaction={handleUpdateTransaction}
-    onDeleteTransaction={handleDeleteTransaction}/>}
+            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
             {activeTab === 'goals' && <SavingView />}
             {activeTab === 'aiAssesor' && <AssesorView />}
           </div>

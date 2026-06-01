@@ -13,15 +13,8 @@ const menuItems = [
 
 // Añadimos isOpen y setIsOpen para controlar la vista en móvil
 export default function SideBar({ activeTab, setActiveTab, userProfile, isOpen, setIsOpen }){
-    const handleLogout = async () => {
-        try {
-            await fetch('http://localhost:8000/user/logout', { 
-                method: 'POST',
-                credentials: 'include'
-            });
-            } catch (error) {
-            console.error("Error al cerrar sesión:", error);
-            }
+    const handleLogout = () => {
+        // TODO: BACKEND: Aquí deben limpiar el token de sesión, localStorage o cookies.
         window.location.href = '/';
     }
 
@@ -90,12 +83,12 @@ export default function SideBar({ activeTab, setActiveTab, userProfile, isOpen, 
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                         e.currentTarget.style.display = 'none';
-                                        e.currentTarget.parentElement.innerHTML = `<span class="font-[Satoshi-Bold] text-sm">${userProfile?.firstname?.[0] || ''}${userProfile?.lastname?.[0] || ''}</span>`;
+                                        e.currentTarget.parentElement.innerHTML = `<span class="font-[Satoshi-Bold] text-sm">${userProfile?.firstName?.[0] || ''}${userProfile?.lastName?.[0] || ''}</span>`;
                                     }}
                                 />
                             ) : (
                                 <span className="font-[Satoshi-Bold] text-sm">
-                                    {userProfile?.firstname?.[0] || ''}{userProfile?.lastname?.[0] || ''}
+                                    {userProfile?.firstName?.[0] || ''}{userProfile?.lastName?.[0] || ''}
                                 </span>
                             )}
                         </div>
@@ -103,10 +96,10 @@ export default function SideBar({ activeTab, setActiveTab, userProfile, isOpen, 
                         {/* INYECCIÓN DE DATOS */}
                         <div className="overflow-hidden">
                             <p className="font-[Satoshi-Medium] text-white truncate">
-                                {userProfile ? `${userProfile.firstname} ${userProfile.lastname}` : 'Cargando...'}
+                                {userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : 'Cargando...'}
                             </p>
                             <p className="text-xs text-gray-500 truncate">
-                                {userProfile?.university || 'Estudiante'}
+                                {userProfile?.school || 'Estudiante'}
                             </p>
                         </div>
                     </div>
