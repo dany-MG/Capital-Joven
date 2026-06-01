@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 
 export const SavingView = () => {
   // =====================================================================
-  // 1. ESTADOS
+  // 1. ESTADOS (Multimetas)
   // =====================================================================
   const [isLoading, setIsLoading] = useState(true);
   const [goals, setGoals] = useState([]); 
@@ -18,61 +18,43 @@ export const SavingView = () => {
     endDate: ''
   });
 
-  // URL Base de tu API (Ajusta el puerto si tu FastAPI corre en otro como el 8000)
-  const API_BASE_URL = 'http://localhost:8000/goal';
-
-  // Configuración por defecto para fetch con manejo de Cookies (Sesión)
-  const fetchOptions = (method, body = null) => {
-    const options = {
-      method: method,
-      headers: {},
-      credentials: 'include' // <--- Crucial para que get_current_user_from_cookie funcione
-    };
-    if (body) {
-      options.headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(body);
-    }
-    return options;
-  };
-
   // =====================================================================
   // 2. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
-  const fetchGoals = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(`${API_BASE_URL}/`, fetchOptions('GET'));
-      
-      if (res.status === 404) {
-        setGoals([]);
-        return;
-      }
-      
-      if (!res.ok) throw new Error('Error al obtener las metas');
-      
-      const data = await res.json();
-      
-      const mappedGoals = data.map(g => ({
-        id: g.id,
-        title: g.title,
-        description: g.description,
-        targetAmount: g.target_amount,
-        currentAmount: g.current_amount,
-        startDate: g.start_date ? g.start_date.split('T')[0] : '',
-        endDate: g.end_date ? g.end_date.split('T')[0] : ''
-      }));
-
-      setGoals(mappedGoals);
-    } catch (error) {
-      console.error(error);
-      Swal.fire('Error', 'No se pudieron cargar tus metas', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchGoals();
+    // TODO: BACKEND - GET de todas las metas del usuario
+    /* fetch('/api/savings/goals')
+      .then(res => res.json())
+      .then(data => {
+        setGoals(data);
+        setIsLoading(false);
+      });
+    */
+
+    // Simulación temporal
+    setTimeout(() => {
+      setGoals([
+        {
+          id: 1,
+          title: "Fondo de Emergencia",
+          description: "Reservado para imprevistos médicos.",
+          targetAmount: 5000,
+          currentAmount: 5000, // <--- Simulamos esta como completada para que veas el efecto
+          startDate: "2024-01-01",
+          endDate: "2024-06-30"
+        },
+        {
+          id: 2,
+          title: "Laptop Nueva",
+          description: "Ahorro para renovación de equipo.",
+          targetAmount: 15000,
+          currentAmount: 1500,
+          startDate: "2024-02-15",
+          endDate: "2024-12-20"
+        }
+      ]);
+      setIsLoading(false);
+    }, 1000);
   }, []);
 
   // =====================================================================
@@ -80,36 +62,26 @@ export const SavingView = () => {
   // =====================================================================
 
   // CREAR META (POST)
-  const handleCreateGoal = async (e) => {
+  const handleCreateGoal = (e) => {
     e.preventDefault();
-  
-    const backendGoalData = {
-      title: newGoal.title,
-      description: newGoal.description,
-      target_amount: Number(newGoal.targetAmount),
-      current_amount: 0,
-      start_date: newGoal.startDate ? new Date(newGoal.startDate).toISOString() : null,
-      end_date: newGoal.endDate ? new Date(newGoal.endDate).toISOString() : null
+    
+    const goalToSave = {
+      ...newGoal,
+      id: Date.now(),
+      currentAmount: 0,
+      targetAmount: Number(newGoal.targetAmount)
     };
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/register`, fetchOptions('POST', backendGoalData));
-      
-      if (!res.ok) throw new Error('No se pudo registrar la meta');
-      
-      await fetchGoals();
-      
-      setShowForm(false);
-      setNewGoal({ title: '', description: '', targetAmount: '', startDate: '', endDate: '' });
+    // TODO: BACKEND - POST a /api/savings/goals
+    setGoals([...goals, goalToSave]);
+    setShowForm(false);
+    setNewGoal({ title: '', description: '', targetAmount: '', startDate: '', endDate: '' });
 
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success',
-        title: 'Meta creada exitosamente', showConfirmButton: false, timer: 3000,
-        background: '#101010', color: '#10b981'
-      });
-    } catch (error) {
-      Swal.fire('Error', 'Hubo un problema al guardar la meta', 'error');
-    }
+    Swal.fire({
+      toast: true, position: 'bottom-end', icon: 'success',
+      title: 'Meta creada exitosamente', showConfirmButton: false, timer: 3000,
+      background: '#101010', color: '#10b981'
+    });
   };
 
   // ABONAR A META (PUT)
@@ -127,30 +99,19 @@ export const SavingView = () => {
 
     if (amount) {
       const numericAmount = Number(amount);
-      
-      // Adaptamos al esquema "AddAmountGoal"
-      const backendAmountData = { amount: numericAmount };
 
-      try {
-        const res = await fetch(`${API_BASE_URL}/add/${goalId}`, fetchOptions('PUT', backendAmountData));
-        
-        if (!res.ok) throw new Error('No se pudo añadir el monto');
+      // TODO: BACKEND - PUT/POST a /api/savings/goals/${goalId}/add-funds
+      setGoals(prevGoals => prevGoals.map(goal => 
+        goal.id === goalId 
+          ? { ...goal, currentAmount: goal.currentAmount + numericAmount } 
+          : goal
+      ));
 
-        // Actualizamos localmente para evitar parpadeos, o puedes llamar a fetchGoals()
-        setGoals(prevGoals => prevGoals.map(goal => 
-          goal.id === goalId 
-            ? { ...goal, currentAmount: goal.currentAmount + numericAmount } 
-            : goal
-        ));
-
-        Swal.fire({
-          toast: true, position: 'bottom-end', icon: 'success',
-          title: `Abono de $${numericAmount} registrado`,
-          showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-        });
-      } catch (error) {
-        Swal.fire('Error', 'No se pudo registrar el abono', 'error');
-      }
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: `Abono de $${numericAmount} registrado`,
+        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+      });
     }
   };
 
@@ -170,22 +131,24 @@ export const SavingView = () => {
     });
 
     if (result.isConfirmed) {
+      // TODO: BACKEND - DELETE a /api/savings/goals/${goalId}
+      /* Ejemplo de implementación real:
       try {
-        const res = await fetch(`${API_BASE_URL}/delete/${goalId}`, fetchOptions('DELETE'));
-        
-        if (!res.ok) throw new Error("Fallo al eliminar");
-        
-        // Actualización en el estado de React
-        setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
-
-        Swal.fire({
-          toast: true, position: 'bottom-end', icon: 'success',
-          title: 'Meta eliminada correctamente',
-          showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-        });
+        const response = await fetch(`/api/savings/goals/${goalId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error("Fallo al eliminar");
       } catch (error) {
-        Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
+        return Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
       }
+      */
+
+      // Actualización de UI Frontend
+      setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
+
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: 'Meta eliminada correctamente',
+        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+      });
     }
   };
 
@@ -193,7 +156,6 @@ export const SavingView = () => {
   // 4. CÁLCULOS AUXILIARES
   // =====================================================================
   const calculateProgress = (current, target) => {
-    if (!target || target <= 0) return "0.0";
     return Math.min((current / target) * 100, 100).toFixed(1);
   };
 

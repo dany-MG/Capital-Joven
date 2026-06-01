@@ -6,7 +6,6 @@ import AuthInput from '../elements/AuthInput.astro';
 <AuthLayout title="Crear cuenta">
   <div class="auth-card w-full max-w-md bg-zinc-900/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl my-8">
 
-    <!-- Header -->
     <div class="auth-item flex flex-col items-center text-center mb-8">
       <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">
@@ -24,7 +23,6 @@ import AuthInput from '../elements/AuthInput.astro';
       </p>
     </div>
 
-    <!-- Formulario -->
     <form id="register-form" class="flex flex-col gap-5" novalidate>
 
       <div class="auth-item">
@@ -64,73 +62,6 @@ import AuthInput from '../elements/AuthInput.astro';
         />
       </div>
 
-      <div class="auth-field flex flex-col gap-2 w-full auth-item">
-        <label for="incomeSource" class="text-sm font-medium text-gray-300 ml-1">Fuente principal de ingresos</label>
-        <div class="relative group">
-          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-400 transition-colors duration-300 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-          </span>
-          <select 
-            id="incomeSource" 
-            name="incomeSource" 
-            required 
-            class="w-full pl-11 pr-10 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-white backdrop-blur-md focus:outline-none focus:border-emerald-500/60 focus:bg-zinc-900/70 focus:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300 appearance-none cursor-pointer">
-            <option value="" disabled selected class="bg-zinc-900 text-gray-500">Selecciona una opción</option>
-            <option value="nomina" class="bg-zinc-900 text-white">Nómina / Salario</option>
-            <option value="ventas" class="bg-zinc-900 text-white">Ventas / Negocio</option>
-            <option value="inversiones" class="bg-zinc-900 text-white">Inversiones</option>
-            <option value="regalos" class="bg-zinc-900 text-white">Regalos / Mesada familiar</option>
-            <option value="beca" class="bg-zinc-900 text-white">Beca</option>
-            <option value="otros" class="bg-zinc-900 text-white">Otros</option>
-          </select>
-          <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          </div>
-        </div>
-        <p class="error-msg text-xs text-red-400 ml-1 hidden"></p>
-      </div>
-
-      <div class="auth-field flex flex-col gap-2 w-full auth-item">
-        <label for="incomeFrequency" class="text-sm font-medium text-gray-300 ml-1">Frecuencia</label>
-        <div class="relative group">
-          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-400 transition-colors duration-300 pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-          </span>
-          <select 
-            id="incomeFrequency" 
-            name="incomeFrequency" 
-            required 
-            class="w-full pl-11 pr-10 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-white backdrop-blur-md focus:outline-none focus:border-emerald-500/60 focus:bg-zinc-900/70 focus:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300 appearance-none cursor-pointer">
-            <option value="" disabled selected class="bg-zinc-900 text-gray-500">Selecciona la frecuencia</option>
-            <option value="unico" class="bg-zinc-900 text-white">Único</option>
-            <option value="semanal" class="bg-zinc-900 text-white">Semanal</option>
-            <option value="quincenal" class="bg-zinc-900 text-white">Quincenal</option>
-            <option value="mensual" class="bg-zinc-900 text-white">Mensual</option>
-          </select>
-          <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          </div>
-        </div>
-        <p class="error-msg text-xs text-red-400 ml-1 hidden"></p>
-      </div>
-
-      <div class="auth-item">
-        <AuthInput
-          type="number"
-          id="incomeAmount"
-          name="incomeAmount"
-          label="Monto mensual estimado ($)"
-          placeholder="Ej. 3500"
-          icon="dollar"
-          required
-        />
-      </div>
-
       <div class="auth-item">
         <AuthInput
           type="email"
@@ -155,7 +86,6 @@ import AuthInput from '../elements/AuthInput.astro';
           icon="lock"
           required
         />
-        <!-- Indicador de fortaleza -->
         <div id="strength-wrapper" class="mt-2 hidden">
           <div class="flex gap-1">
             <span class="strength-bar h-1 flex-1 rounded-full bg-white/10 transition-all duration-300"></span>
@@ -180,7 +110,6 @@ import AuthInput from '../elements/AuthInput.astro';
         />
       </div>
 
-      <!-- Términos -->
       <label class="auth-item flex items-start gap-2 text-sm text-gray-400 cursor-pointer select-none">
         <input type="checkbox" name="terms" id="terms" class="w-4 h-4 mt-0.5 rounded border-white/20 bg-zinc-900/50 accent-emerald-500"/>
         <span>
@@ -188,10 +117,8 @@ import AuthInput from '../elements/AuthInput.astro';
         </span>
       </label>
 
-      <!-- Error global -->
       <p id="form-error" class="auth-item text-sm text-red-400 text-center hidden"></p>
 
-      <!-- Botón principal -->
       <button
         type="submit"
         id="submit-btn"
@@ -206,22 +133,20 @@ import AuthInput from '../elements/AuthInput.astro';
     </form>
 
     <p class="auth-item text-center text-sm text-gray-400 mt-8">
-      ¿Ya tienes cuenta?
+      ¿Ya tienes cuenta? 
       <a href="/login" class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
         Inicia sesión
       </a>
     </p>
   </div>
   
-
 </AuthLayout>
 
 <script>
   import { gsap } from 'gsap';
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Animación de entrada (fromTo para que los elementos siempre terminen visibles
-    // aunque GSAP tarde o falle en cargar)
+    // Animación de entrada
     gsap.fromTo('.auth-card',
       { y: 30, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }
@@ -245,7 +170,7 @@ import AuthInput from '../elements/AuthInput.astro';
     const strengthLabel = document.getElementById('strength-label')!;
 
     const showFieldError = (input: HTMLInputElement, msg: string) => {
-      const wrapper = input.closest('.auth-field');
+      const wrapper = input.closest('.auth-field') || input.parentElement;
       const errEl = wrapper?.querySelector('.error-msg') as HTMLElement | null;
       if (errEl) {
         errEl.textContent = msg;
@@ -255,28 +180,17 @@ import AuthInput from '../elements/AuthInput.astro';
     };
 
     const clearFieldError = (input: HTMLInputElement) => {
-      const wrapper = input.closest('.auth-field');
+      const wrapper = input.closest('.auth-field') || input.parentElement;
       const errEl = wrapper?.querySelector('.error-msg') as HTMLElement | null;
       if (errEl) errEl.classList.add('hidden');
       input.classList.remove('!border-red-500/60');
     };
 
-    form.querySelectorAll('input, select').forEach((element) => {
-      element.addEventListener('input', () => clearFieldError(element as HTMLInputElement));
-      element.addEventListener('change', () => clearFieldError(element as HTMLInputElement));
-    });
-
     form.querySelectorAll('input').forEach((input) => {
       input.addEventListener('input', () => clearFieldError(input as HTMLInputElement));
     });
 
-    // ===== Medidor de fortaleza (FÓRMULA CORREGIDA) =====
-    // Reglas:
-    //   +1 si longitud >= 8
-    //   +1 si tiene mayúsculas Y minúsculas
-    //   +1 si tiene números
-    //   +1 si tiene símbolos O longitud >= 12
-    // Así contraseñas largas (≥12) sin símbolo igual pueden llegar a "Fuerte".
+    // ===== Medidor de fortaleza =====
     const calcStrength = (pwd: string) => {
       if (!pwd) return 0;
       let score = 0;
@@ -323,7 +237,7 @@ import AuthInput from '../elements/AuthInput.astro';
       formError.classList.add('hidden');
 
       const data = new FormData(form);
-      const firstname = String(data.get('firstname') || '').trim();
+      const name = String(data.get('name') || '').trim();
       const lastname = String(data.get('lastname') || '').trim();
       const email = String(data.get('email') || '').trim();
       const university = String(data.get('university') || '').trim();
@@ -332,17 +246,17 @@ import AuthInput from '../elements/AuthInput.astro';
       const termsAccepted = (form.querySelector<HTMLInputElement>('#terms'))?.checked;
 
       let valid = true;
-      const firstnameInput = form.querySelector<HTMLInputElement>('#firstname')!;
+      const nameInput = form.querySelector<HTMLInputElement>('#name')!;
       const lastnameInput = form.querySelector<HTMLInputElement>('#lastname')!;
       const emailInput = form.querySelector<HTMLInputElement>('#email')!;
 
-      if (firstname.length < 3) {
-        showFieldError(firstnameInput, 'Ingresa tu nombre completo');
+      if (name.length < 3) {
+        showFieldError(nameInput, 'Ingresa tu(s) nombre(s) completo(s)');
         valid = false;
       }
 
       if (lastname.length < 3) {
-        showFieldError(lastnameInput, 'Ingresa tu apellido completo');
+        showFieldError(lastnameInput, 'Ingresa tu(s) apellido(s) completo(s)');
         valid = false;
       }
 
@@ -374,18 +288,18 @@ import AuthInput from '../elements/AuthInput.astro';
       submitBtn.querySelector('.btn-loader')?.classList.remove('hidden');
 
       try {
-        const API_URL = "http://localhost:8000";
-        const response = await fetch(`${API_URL}/user/register`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({firstname, lastname,  email, university, password})
-        });
-        if(!response.ok)
-        {
-          const error = await response.json();
-          throw new Error(error.detail || "Error al registrar el usuario");
-        }
-        await response.json();
+        // TODO: reemplazar por tu endpoint real
+        // const res = await fetch('/api/auth/register', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ name, email, university, password }),
+        // });
+        // if (!res.ok) {
+        //   const { message } = await res.json();
+        //   throw new Error(message || 'No se pudo crear la cuenta');
+        // }
+
+        await new Promise((r) => setTimeout(r, 900)); // simulación
         window.location.href = '/login';
       } catch (err) {
         formError.textContent = (err as Error).message || 'Ocurrió un error, intenta de nuevo';
