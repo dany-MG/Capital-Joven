@@ -7,7 +7,7 @@ const menuItems = [
     { name: 'Análisis', icon: BarChart3, id: 'analysis' },
     { name: 'Metas de Ahorro', icon: PiggyBank, id: 'goals' },
     { name: 'Asesor IA', icon: BrainCircuit, id: 'aiAssesor' },
-    { name: 'Tips Financieros', icon: BookMarked, id: 'tips' },
+    { name: 'Educación Financiera', icon: BookMarked, id: 'tips' },
     { name: 'Configuración', icon: Settings, id: 'settings' },
 ]
 
