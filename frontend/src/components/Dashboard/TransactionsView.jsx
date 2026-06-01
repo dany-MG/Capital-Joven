@@ -13,9 +13,9 @@ const getCategoryIcon = (category) => {
   if (lowerCat.includes('comida') || lowerCat.includes('food')) return ShoppingBag;
   if (lowerCat.includes('servicios') || lowerCat.includes('utilities')) return Zap;
   if (lowerCat.includes('transporte') || lowerCat.includes('transport')) return Car;
-  if (lowerCat.includes('salario') || lowerCat.includes('salary')) return Wallet;
-  if(lowerCat.includes('beca') || lowerCat.includes('scholarship')) return Wallet;
-  if (lowerCat.includes('freelance') || lowerCat.includes('project')) return Briefcase;
+  if (lowerCat.includes('salario') || lowerCat.includes('salary') || lowerCat.includes('nomina')) return Wallet;
+  if (lowerCat.includes('beca') || lowerCat.includes('scholarship')) return Wallet;
+  if (lowerCat.includes('freelance') || lowerCat.includes('project') || lowerCat.includes('ventas')) return Briefcase;
   if (lowerCat.includes('salud') || lowerCat.includes('health')) return HeartPulse;
   if (lowerCat.includes('entretenimiento') || lowerCat.includes('entertainment')) return Film;
   if (lowerCat.includes('casa') || lowerCat.includes('home')) return Home;
@@ -403,26 +403,6 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
                         </button>
                       </div>
                     </td>
-
-                    {/* 5. Acciones */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex justify-center items-center gap-2 opacity-100">
-                        <button 
-                          onClick={() => openEditModal(t)}
-                          className="p-2 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
-                          title="Editar registro"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteClick(t.id)}
-                          className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                          title="Eliminar registro"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
                   </tr>
                 );
               })}
@@ -561,7 +541,6 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
                 </div>
               </div>
 
-              {/* Ocultamos las opciones recurrentes si estamos editando para mantenerlo simple */}
               {!isEditing && (
                 <div className="border-t border-white/5 pt-4 mt-2">
                   <label className="flex items-center gap-3 cursor-pointer mb-4 group">
