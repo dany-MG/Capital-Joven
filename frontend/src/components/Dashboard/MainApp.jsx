@@ -38,18 +38,22 @@ export const MainApp = () => {
   useEffect(() => {
     const cargardatos = async () => {
       try {
-        // llamada al perfil
-        const perfilResponse = await fetch('http://localhost:8000/user/profile', {
-          method: 'GET',
-          credentials: 'include' 
-        });
+        setIsLoading(true);
+        
+        const options = {method: 'GET', credentials: 'include'};
+        
+        const [perfilRes, billsRes, incomesRes] = await Promise.all([
+          fetch('http://localhost:8000/user/profile', options),
+          fetch('http://localhost:8000/bill/', options),
+          fetch('http://localhost:8000/income/', options)
+        ]);
 
-        if (!perfilResponse.ok) {
+        if (!perfilRes.ok) {
           window.location.href = '/login';
           return;
         }
 
-        const perfilData = await perfilResponse.json();
+        const perfilData = await perfilRes.json();
         
         setUserProfile({
           firstname: perfilData.firstname || '',
@@ -59,10 +63,43 @@ export const MainApp = () => {
           avatarUrl: perfilData.avatarUrl || ''
         });
 
+        // Procesamos los Gastos (Bills) e inyectamos el 'type' de forma implícita
+        let dbTransactions = [];
+
+        if (billsRes.ok) {
+          const billsData = await billsRes.json();
+          dbTransactions = dbTransactions.concat(
+            billsData.map(b => ({
+              id: b.bill_id || b.id || b._id,
+              date: b.date || new Date().toISOString(), // Fallback si la proyección no da fecha
+              category: b.category || 'Otros',
+              description: b.title || b.description,
+              amount: parseFloat(b.amount) || 0,
+              type: 'expense'
+            }))
+          );
+        }
+
+        // Procesamos los Ingresos (Incomes)
+        if (incomesRes.ok) {
+          const incomesData = await incomesRes.json();
+          dbTransactions = dbTransactions.concat(
+            incomesData.map(i => ({
+              id: i.income_id || i.id || i._id,
+              date: i.date || new Date().toISOString(), // Fallback seguro
+              category: i.origin || 'Otros',
+              description: i.title || i.description,
+              amount: parseFloat(i.amount) || 0,
+              type: 'income'
+            }))
+          );
+        }
+
+        setTransactions(dbTransactions);
+
       } catch (error) {
         console.error("Error al conectar con el servidor de Capital Joven:", error);
       } finally {
-        // Apagamos la pantalla de carga global una vez procesado el inicio
         setIsLoading(false);
       }
     };
@@ -73,6 +110,8 @@ export const MainApp = () => {
   // =====================================================================
   // 4. LÓGICA DE INTERFAZ Y EVENTOS
   // =====================================================================
+  
+
   
   // Cierre del menú de usuario al dar clic afuera
   useEffect(() => {
@@ -100,22 +139,25 @@ export const MainApp = () => {
     return () => ctx.revert(); 
   }, [isLoading]);
 
+// Agrega la nueva transacción al inicio de la lista en tiempo real
   const handleAddTransaction = (newTx) => {
-    // TODO: BACKEND - Reemplazar por un POST a la base de datos si deciden no hacerlo directamente en TransactionsView.
-    if (Array.isArray(newTx)) {
-      const newTransactions = newTx.map(tx => ({
-        ...tx,
-        id: Math.random().toString(36).substr(2, 9),
-      }));
-      setTransactions(prev => [...newTransactions, ...prev]);
-    } else {
-      const transaction = { ...newTx, id: Math.random().toString(36).substr(2, 9) };
-      setTransactions(prev => [transaction, ...prev]);
-    }
+    setTransactions(prev => [newTx, ...prev]);
+  };
+
+  // 🌟 NUEVO: Modifica la transacción existente dentro del estado sin recargar
+  const handleUpdateTransaction = (updatedTx) => {
+    setTransactions(prev => 
+      prev.map(t => (t.id === updatedTx.id ? { ...t, ...updatedTx } : t))
+    );
+  };
+
+  // 🌟 NUEVO: Remueve la transacción eliminada del estado al instante
+  const handleDeleteTransaction = (id) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
   const showUserInfo = () => setShowUserMenu(!showUserMenu);
-
+  
   // =====================================================================
   // 5. PANTALLA DE CARGA (Loading Screen)
   // =====================================================================
@@ -161,7 +203,7 @@ export const MainApp = () => {
               <h2 className="text-xl md:text-2xl font-[Satoshi-Bold] text-white">
                 {activeTab === 'dashboard' && 'Resumen Financiero'}
                 {activeTab === 'tips' && 'Educación Financiera'}
-                {activeTab === 'settings' && 'Configuración'}
+                {activeTab === 'settings' && 'Configuración de Perfil'}
                 {activeTab === 'analysis' && 'Análisis Financiero'}
                 {activeTab === 'transactions' && 'Ingresos y Egresos'}
                 {activeTab === 'goals' && 'Ahorros y Metas'}
@@ -256,10 +298,11 @@ export const MainApp = () => {
             {activeTab === 'tips' && <TipsView />}
             
             {/* Ahora le pasamos el userProfile real a SettingsView para que lo editen */}
-            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} />}
+            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} onProfileUpdate={setUserProfile} />}
             
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
-            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
+            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}onUpdateTransaction={handleUpdateTransaction}
+    onDeleteTransaction={handleDeleteTransaction}/>}
             {activeTab === 'goals' && <SavingView />}
             {activeTab === 'aiAssesor' && <AssesorView />}
           </div>
