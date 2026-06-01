@@ -1,38 +1,42 @@
 import React, { useState, useMemo } from 'react';
 import { 
   ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownLeft, Search, Calendar,
-  Wallet, ShoppingBag, Zap, Coffee, Car, Home, Briefcase, HeartPulse, Film, Plus, X, Loader2
+  Wallet, ShoppingBag, Zap, Coffee, Car, Home, Briefcase, HeartPulse, Film, Plus, X, Loader2,
+  Pencil, Trash2 // <-- Importamos los iconos para Editar y Eliminar
 } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, subMonths, addMonths, addWeeks, addDays, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
-import Swal from 'sweetalert2'; // Importamos SweetAlert para las notificaciones
+import Swal from 'sweetalert2';
 
-// Mapeo de iconos basado en categoría
 const getCategoryIcon = (category) => {
   const lowerCat = category.toLowerCase();
   if (lowerCat.includes('comida') || lowerCat.includes('food')) return ShoppingBag;
   if (lowerCat.includes('servicios') || lowerCat.includes('utilities')) return Zap;
   if (lowerCat.includes('transporte') || lowerCat.includes('transport')) return Car;
   if (lowerCat.includes('salario') || lowerCat.includes('salary')) return Wallet;
+  if(lowerCat.includes('beca') || lowerCat.includes('scholarship')) return Wallet;
   if (lowerCat.includes('freelance') || lowerCat.includes('project')) return Briefcase;
   if (lowerCat.includes('salud') || lowerCat.includes('health')) return HeartPulse;
   if (lowerCat.includes('entretenimiento') || lowerCat.includes('entertainment')) return Film;
   if (lowerCat.includes('casa') || lowerCat.includes('home')) return Home;
-  return Coffee; // Default
+  return Coffee;
 };
 
 // =====================================================================
-// NOTA PARA BACKEND: Esta vista recibe 'transactions' desde MainApp.jsx 
-// para evitar peticiones GET redundantes. 
+// NOTA PARA BACKEND: Ahora recibimos también funciones para actualizar y eliminar
 // =====================================================================
-export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
+export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdateTransaction, onDeleteTransaction }) => {
   // =====================================================================
   // 1. ESTADOS LOCALES
   // =====================================================================
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Estados del Modal
   const [isAdding, setIsAdding] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Estado de carga para el botón de guardado
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
@@ -46,8 +50,36 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
   });
 
   // =====================================================================
-  // 2. LÓGICA DE GUARDADO (POST al Backend)
+  // 2. LÓGICA DE GUARDADO Y EDICIÓN (POST / PUT)
   // =====================================================================
+  
+  const openEditModal = (t) => {
+    // Rellenamos el formulario con los datos de la transacción seleccionada
+    setNewTransaction({
+      amount: Math.abs(t.amount), // Mostramos el valor absoluto en el input
+      description: t.description,
+      category: t.category,
+      type: t.type,
+      date: t.date.split('T')[0], // Extraemos solo la fecha YYYY-MM-DD
+      isRecurring: false, // La edición de recurrencias suele ser más compleja, la mantenemos simple
+      frequency: 'Mensual',
+      endDate: ''
+    });
+    setEditId(t.id);
+    setIsEditing(true);
+    setIsAdding(true);
+  };
+
+  const handleModalClose = () => {
+    setIsAdding(false);
+    setIsEditing(false);
+    setEditId(null);
+    setNewTransaction({
+      amount: '', description: '', category: 'Comida', type: 'expense',
+      date: format(new Date(), 'yyyy-MM-dd'), isRecurring: false, frequency: 'Mensual', endDate: ''
+    });
+  };
+
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     if (!newTransaction.amount || !newTransaction.description) return;
@@ -60,22 +92,22 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
     
     let payload = null;
 
-    // LÓGICA DE RECURRENCIA (Frontend genera el array temporalmente)
-    if (newTransaction.isRecurring) {
+    if (!isEditing && newTransaction.isRecurring) {
+      // Lógica de creación múltiple (Ya existente)
       const generatedTransactions = [];
       let currentDate = baseDate;
       const endLimit = newTransaction.endDate ? new Date(`${newTransaction.endDate}T23:59:59`) : addMonths(baseDate, 12);
       
       let occurrences = 0;
       while (isBefore(currentDate, endLimit) || currentDate.getTime() === endLimit.getTime()) {
-        if (occurrences > 50) break; // Límite de seguridad
+        if (occurrences > 50) break; 
         
         generatedTransactions.push({
           amount,
           description: `${newTransaction.description} (Repetitivo)`,
           category: newTransaction.category,
           type: newTransaction.type,
-          date: currentDate.toISOString().slice(0, 19) // Formato compatible con SQL (YYYY-MM-DDTHH:mm:ss)
+          date: currentDate.toISOString().slice(0, 19) 
         });
         
         if (newTransaction.frequency === 'Mensual') currentDate = addMonths(currentDate, 1);
@@ -94,58 +126,91 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
       };
     }
 
-    // TODO: BACKEND - Aquí deben atrapar el 'payload' y hacer el POST a la base de datos
-    /* Ejemplo de implementación real:
-    try {
-      // Nota: Decidan si el endpoint recibe un Array (bulk insert) o un solo Objeto
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) throw new Error('Error al guardar la transacción');
-      
-      const savedData = await response.json();
-      
-      // Enviamos la info al estado global de MainApp para que se actualice la tabla
-      if(onAddTransaction) onAddTransaction(savedData);
-
-    } catch (error) {
-      console.error(error);
-      Swal.fire('Error', 'No se pudo guardar la transacción', 'error');
-      setIsSubmitting(false);
-      return;
-    }
+    // TODO: BACKEND - Lógica PUT o POST dependiendo del estado
+    /* try {
+      if (isEditing) {
+        // Petición PUT para actualizar
+        const res = await fetch(`/api/transactions/${editId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const updatedData = await res.json();
+        if (onUpdateTransaction) onUpdateTransaction(updatedData);
+      } else {
+        // Petición POST para crear
+        const res = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const savedData = await res.json();
+        if (onAddTransaction) onAddTransaction(savedData);
+      }
+    } catch (error) { ... }
     */
 
-    // Simulación Frontend (MOCK)
+    // Simulación Frontend
     setTimeout(() => {
-      if(onAddTransaction) onAddTransaction(payload);
+      if (isEditing) {
+        // Simulamos la actualización enviando el objeto modificado al padre
+        if (onUpdateTransaction) onUpdateTransaction({ ...payload, id: editId });
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success', 
+          title: 'Transacción actualizada', showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+        });
+      } else {
+        if (onAddTransaction) onAddTransaction({ ...payload, id: Date.now() });
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success', 
+          title: 'Transacción guardada', showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+        });
+      }
       
       setIsSubmitting(false);
-      setIsAdding(false);
-      
-      // Reiniciamos el formulario
-      setNewTransaction({
-        amount: '', description: '', category: 'Comida', type: 'expense',
-        date: format(new Date(), 'yyyy-MM-dd'), isRecurring: false, frequency: 'Mensual', endDate: ''
-      });
-
-      // Notificación de éxito
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success', 
-        title: 'Transacción guardada', showConfirmButton: false, 
-        timer: 3000, background: '#101010', color: '#10b981'
-      });
+      handleModalClose();
     }, 800);
   };
 
   // =====================================================================
-  // 3. FILTROS Y CÁLCULOS (Lógica Frontend)
+  // 3. LÓGICA DE ELIMINACIÓN (DELETE)
   // =====================================================================
-  // TODO: BACKEND - Si la cantidad de transacciones por usuario se vuelve masiva (>5000), 
-  // esta lógica de filtrado y totales debería moverse al servidor usando paginación en el GET.
+  const handleDeleteClick = async (id) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar transacción?',
+      text: "Esta acción no afectará las transacciones recurrentes futuras, solo este registro.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#27272a',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      background: '#101010',
+      color: '#ffffff'
+    });
+
+    if (result.isConfirmed) {
+      // TODO: BACKEND - Petición DELETE
+      /*
+      try {
+        await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+        if (onDeleteTransaction) onDeleteTransaction(id);
+      } catch (error) { ... }
+      */
+
+      // Simulación Frontend
+      if (onDeleteTransaction) onDeleteTransaction(id);
+      
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success', 
+        title: 'Registro eliminado', showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+      });
+    }
+  };
+
+  // =====================================================================
+  // 4. FILTROS Y CÁLCULOS
+  // =====================================================================
   const filteredTransactions = useMemo(() => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
@@ -173,7 +238,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   // =====================================================================
-  // 4. RENDERIZADO DE LA INTERFAZ
+  // 5. RENDERIZADO DE LA INTERFAZ
   // =====================================================================
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -205,7 +270,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
           
           <button 
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-darkbg px-4 py-2 rounded-xl transition-colors duration-300 font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20 cursor-pointer"
+            className="flex items-center gap-2 bg-emerald-500 text-black hover:bg-emerald-400 px-4 py-2 rounded-xl transition-colors duration-300 font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20 cursor-pointer"
           >
             <Plus size={18} />
             <span className="hidden sm:inline">Nueva</span>
@@ -217,7 +282,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-emerald-500/5 border border-emerald-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-emerald-500/10 transition-colors duration-300">
           <div>
-            <p className="text-sm text-emerald-400 font-medium mb-1">Ingresos de {format(currentMonth, 'MMM', { locale: es })}</p>
+            <p className="text-md text-emerald-400 font-medium mb-1">Ingresos de {format(currentMonth, 'MMM', { locale: es })}</p>
             <p className="text-2xl font-[Satoshi-Bold] text-emerald-400">+${totals.income.toLocaleString('es-MX', {minimumFractionDigits: 2})}</p>
           </div>
           <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform">
@@ -227,7 +292,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
 
         <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-red-500/10 transition-colors duration-300">
           <div>
-            <p className="text-sm text-red-400 font-medium mb-1">Gastos de {format(currentMonth, 'MMM', { locale: es })}</p>
+            <p className="text-md text-red-400 font-medium mb-1">Gastos de {format(currentMonth, 'MMM', { locale: es })}</p>
             <p className="text-2xl font-[Satoshi-Bold] text-red-400">-${totals.expense.toLocaleString('es-MX', {minimumFractionDigits: 2})}</p>
           </div>
           <div className="p-3 bg-red-500/20 rounded-xl text-red-400 group-hover:scale-110 transition-transform">
@@ -237,7 +302,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
 
         <div className="bg-cyan-500/5 border border-cyan-500/20 p-6 rounded-2xl flex items-center justify-between group hover:bg-cyan-500/10 transition-colors duration-300">
           <div>
-            <p className="text-sm text-cyan-400 font-medium mb-1">Balance Mensual</p>
+            <p className="text-md text-cyan-400 font-medium mb-1">Balance Mensual</p>
             <p className={`text-2xl font-[Satoshi-Bold] ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {balance >= 0 ? '+' : ''}${balance.toLocaleString('es-MX', {minimumFractionDigits: 2})}
             </p>
@@ -248,16 +313,17 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
         </div>
       </div>
 
-      {/* Lista Detallada de Transacciones */}
+      {/* Lista Detallada de Transacciones (Columnas Reordenadas) */}
       <div className="bg-darkpanel rounded-2xl shadow-lg border border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider font-[Satoshi-Bold] border-b border-white/5">
               <tr>
-                <th className="px-6 py-4">Fecha & Hora</th>
-                <th className="px-6 py-4">Categoría</th>
                 <th className="px-6 py-4">Descripción</th>
+                <th className="px-6 py-4">Categoría</th>
+                <th className="px-6 py-4">Fecha & Hora</th>
                 <th className="px-6 py-4 text-right">Monto</th>
+                <th className="px-6 py-4 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -268,18 +334,14 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
 
                 return (
                   <tr key={t.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="font-[Satoshi-Bold] text-white text-lg">{format(date, 'dd')}</span>
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <Calendar size={10} />
-                          <span>{format(date, 'MMM, yyyy', { locale: es })}</span>
-                          <span className="mx-1">•</span>
-                          <span>{format(date, 'HH:mm')}</span>
-                        </div>
-                      </div>
+                    {/* 1. Descripción */}
+                    <td className="px-6 py-4">
+                      <span className="text-white font-medium group-hover:text-emerald-400 transition-colors">
+                        {t.description}
+                      </span>
                     </td>
-                    
+
+                    {/* 2. Categoría */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg border ${
@@ -287,20 +349,46 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
                         }`}>
                           <CategoryIcon size={18} />
                         </div>
-                        <span className="font-medium text-white">{t.category}</span>
+                        <span className="font-medium text-gray-300">{t.category}</span>
                       </div>
                     </td>
 
-                    <td className="px-6 py-4">
-                      <span className="text-gray-400 font-medium group-hover:text-white transition-colors">
-                        {t.description}
-                      </span>
+                    {/* 3. Fecha y Hora */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="font-[Satoshi-Bold] text-gray-300 text-md">{format(date, 'dd')} {format(date, 'MMM, yyyy', { locale: es })}</span>
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                          <Calendar size={12} />
+                          <span>{format(date, 'HH:mm')}</span>
+                        </div>
+                      </div>
                     </td>
 
+                    {/* 4. Monto */}
                     <td className={`px-6 py-4 whitespace-nowrap text-right font-[Satoshi-Bold] text-lg ${
                       isIncome ? 'text-emerald-400' : 'text-red-400'
                     }`}>
                       {isIncome ? '+' : '-'}${Math.abs(t.amount).toLocaleString('es-MX')}
+                    </td>
+
+                    {/* 5. Acciones */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex justify-center items-center gap-2 opacity-100">
+                        <button 
+                          onClick={() => openEditModal(t)}
+                          className="p-2 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                          title="Editar registro"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteClick(t.id)}
+                          className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Eliminar registro"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -308,7 +396,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
               
               {filteredTransactions.length === 0 && (
                 <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                     <div className="flex flex-col items-center gap-3">
                       <div className="p-4 bg-white/5 rounded-full border border-white/10">
                         <Search size={32} className="text-gray-600" />
@@ -329,14 +417,16 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
         </div>
       </div>
 
-      {/* Modal para Agregar Transacción */}
+      {/* Modal para Agregar/Editar Transacción */}
       {isAdding && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-darkbg/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="bg-darkpanel bg-zinc-900/80 rounded-3xl shadow-2xl border border-white/10 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center p-6 border-b border-white/5">
-              <h3 className="text-xl font-[Satoshi-Bold] text-white">Nueva Transacción</h3>
+              <h3 className="text-xl font-[Satoshi-Bold] text-white">
+                {isEditing ? 'Editar Transacción' : 'Nueva Transacción'}
+              </h3>
               <button 
-                onClick={() => setIsAdding(false)}
+                onClick={handleModalClose}
                 className="text-gray-500 hover:text-red-400 transition-colors cursor-pointer"
               >
                 <X size={24} />
@@ -418,6 +508,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
                     ) : (
                       <>
                         <option value="Salario" className='bg-zinc-900'>Salario</option>
+                        <option value="Beca" className='bg-zinc-900'>Beca</option>
                         <option value="Freelance" className='bg-zinc-900'>Freelance</option>
                         <option value="Inversiones" className='bg-zinc-900'>Inversiones</option>
                         <option value="Otros" className='bg-zinc-900'>Otros</option>
@@ -437,43 +528,46 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
                 </div>
               </div>
 
-              <div className="border-t border-white/5 pt-4 mt-2">
-                <label className="flex items-center gap-3 cursor-pointer mb-4 group">
-                  <input 
-                    type="checkbox" 
-                    checked={newTransaction.isRecurring}
-                    onChange={(e) => setNewTransaction({...newTransaction, isRecurring: e.target.checked})}
-                    className="w-5 h-5 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/50 cursor-pointer"
-                  />
-                  <span className="text-sm font-[Satoshi-Bold] text-gray-300 group-hover:text-white transition-colors">Es un registro fijo/recurrente</span>
-                </label>
+              {/* Ocultamos las opciones recurrentes si estamos editando para mantenerlo simple */}
+              {!isEditing && (
+                <div className="border-t border-white/5 pt-4 mt-2">
+                  <label className="flex items-center gap-3 cursor-pointer mb-4 group">
+                    <input 
+                      type="checkbox" 
+                      checked={newTransaction.isRecurring}
+                      onChange={(e) => setNewTransaction({...newTransaction, isRecurring: e.target.checked})}
+                      className="w-5 h-5 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/50 cursor-pointer"
+                    />
+                    <span className="text-sm font-[Satoshi-Bold] text-gray-300 group-hover:text-white transition-colors">Es un registro fijo/recurrente</span>
+                  </label>
 
-                {newTransaction.isRecurring && (
-                  <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Frecuencia</label>
-                      <select
-                        value={newTransaction.frequency}
-                        onChange={(e) => setNewTransaction({...newTransaction, frequency: e.target.value})}
-                        className="w-full px-4 py-3 rounded-xl bg-darkpanel border border-white/10 focus:border-emerald-500/30 outline-none text-white transition-all duration-300"
-                      >
-                        <option value="Mensual" className='bg-zinc-900'>Mensual</option>
-                        <option value="Quincenal" className='bg-zinc-900'>Quincenal</option>
-                        <option value="Semanal" className='bg-zinc-900'>Semanal</option>
-                      </select>
+                  {newTransaction.isRecurring && (
+                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Frecuencia</label>
+                        <select
+                          value={newTransaction.frequency}
+                          onChange={(e) => setNewTransaction({...newTransaction, frequency: e.target.value})}
+                          className="w-full px-4 py-3 rounded-xl bg-darkpanel border border-white/10 focus:border-emerald-500/30 outline-none text-white transition-all duration-300"
+                        >
+                          <option value="Mensual" className='bg-zinc-900'>Mensual</option>
+                          <option value="Quincenal" className='bg-zinc-900'>Quincenal</option>
+                          <option value="Semanal" className='bg-zinc-900'>Semanal</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Fecha límite</label>
+                        <input 
+                          type="date" 
+                          value={newTransaction.endDate}
+                          onChange={(e) => setNewTransaction({...newTransaction, endDate: e.target.value})}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-transparent focus:border-emerald-500/30 focus:bg-white/10 outline-none text-gray-300 transition-all duration-300 scheme-dark"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Fecha límite</label>
-                      <input 
-                        type="date" 
-                        value={newTransaction.endDate}
-                        onChange={(e) => setNewTransaction({...newTransaction, endDate: e.target.value})}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-transparent focus:border-emerald-500/30 focus:bg-white/10 outline-none text-gray-300 transition-all duration-300 scheme-dark"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               <div className="pt-4">
                 <button
@@ -482,11 +576,11 @@ export const TransactionsView = ({ transactions = [], onAddTransaction }) => {
                   className={`w-full flex justify-center items-center gap-2 font-bold py-3 px-4 rounded-xl transition-all duration-300 transform shadow-[0_0_15px_rgba(16,185,129,0.3)] cursor-pointer ${
                     isSubmitting 
                       ? 'bg-emerald-500/50 text-darkbg cursor-wait' 
-                      : 'bg-emerald-500 hover:bg-emerald-400 text-darkbg hover:-translate-y-1'
+                      : 'bg-emerald-500 text-black hover:bg-emerald-400 hover:-translate-y-1'
                   }`}
                 >
                   {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : null}
-                  {isSubmitting ? 'Guardando...' : 'Guardar Transacción'}
+                  {isSubmitting ? (isEditing ? 'Actualizando...' : 'Guardando...') : (isEditing ? 'Actualizar Transacción' : 'Guardar Transacción')}
                 </button>
               </div>
             </form>

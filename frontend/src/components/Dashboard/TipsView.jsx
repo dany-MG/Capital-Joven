@@ -170,7 +170,7 @@ export const TipsView = () => {
             
             <button 
               onClick={() => setShowCalculator(!showCalculator)}
-              className="bg-white/5 border border-white/10 hover:bg-emerald-500 hover:border-emerald-400 text-white hover:text-darkbg font-bold py-3.5 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transform hover:-translate-y-1 cursor-pointer">
+              className="bg-white/5 border border-white/10 hover:bg-emerald-500 hover:border-emerald-400 text-white hover:text-black font-bold py-3.5 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transform hover:-translate-y-1 cursor-pointer">
               {showCalculator ? 'Ocultar Calculadora' : 'Calcular mi Fondo Ideal'}
             </button>
           </div>
@@ -186,7 +186,7 @@ export const TipsView = () => {
                 <div className="shrink-0 w-8 h-8 rounded-full bg-emerald-500 text-darkbg font-bold flex items-center justify-center">1</div>
                 <div>
                   <h4 className="font-bold text-white">Fondo Inicial ($1,000)</h4>
-                  <p className="text-sm text-gray-400">Tu primer objetivo. Suficiente para cubrir reparaciones menores sin endeudarte.</p>
+                  <p className="text-md text-gray-400">Tu primer objetivo. Suficiente para cubrir reparaciones menores sin endeudarte.</p>
                 </div>
               </div>
               <div className="w-0.5 h-6 bg-white/10 ml-4"></div>
@@ -194,7 +194,7 @@ export const TipsView = () => {
                 <div className="shrink-0 w-8 h-8 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 font-bold flex items-center justify-center">2</div>
                 <div>
                   <h4 className="font-bold text-white">3 Meses de Gastos</h4>
-                  <p className="text-sm text-gray-400">Cubre tus necesidades básicas (renta, comida, servicios) por un trimestre.</p>
+                  <p className="text-md text-gray-400">Cubre tus necesidades básicas (renta, comida, servicios) por un trimestre.</p>
                 </div>
               </div>
             </div>
@@ -289,12 +289,12 @@ export const TipsView = () => {
                     </span>
                   </div>
                 )}
-
+                
                 <div className="mb-4">
                   <label className="text-gray-300 text-sm block mb-3">¿Cuántos meses de seguridad quieres?</label>
                   <div className="flex gap-2 bg-white/5 p-1 rounded-xl w-max">
-                    <button onClick={() => setMonths(3)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 3 ? 'bg-emerald-500 text-darkbg' : 'text-gray-400 hover:text-white'}`}>3 Meses</button>
-                    <button onClick={() => setMonths(6)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 6 ? 'bg-emerald-500 text-darkbg' : 'text-gray-400 hover:text-white'}`}>6 Meses</button>
+                    <button onClick={() => setMonths(3)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 3 ? 'bg-emerald-500 text-black' : 'text-gray-400 hover:text-white'}`}>3 Meses</button>
+                    <button onClick={() => setMonths(6)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 6 ? 'bg-emerald-500 text-black' : 'text-gray-400 hover:text-white'}`}>6 Meses</button>
                   </div>
                 </div>
 
@@ -303,12 +303,11 @@ export const TipsView = () => {
                   <span className="text-4xl font-[Satoshi-Bold] text-white">${idealFund.toLocaleString('es-MX')}</span>
                 </div>
               </div>
-
               {/* Botón con Estado de Carga */}
               <button 
                 onClick={handleSetGoal} 
                 disabled={idealFund === 0 || isSavingGoal} 
-                className="w-full mt-6 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-darkbg font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full mt-6 bg-emerald-500 text-black hover:bg-emerald-400 disabled:bg-emerald-500/50 disabled:cursor-not-allowed font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSavingGoal ? <Loader2 size={18} className="animate-spin" /> : <Target size={18} />}
                 {isSavingGoal ? 'Guardando Meta...' : 'Establecer como Meta de Ahorro'}
@@ -334,7 +333,7 @@ export const TipsView = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-[Satoshi-Bold] text-white mb-2">{tip.title}</h4>
-                  <p className="text-gray-400 text-sm leading-relaxed">
+                  <p className="text-gray-400 text-md leading-relaxed">
                     {tip.description}
                   </p>
                 </div>
