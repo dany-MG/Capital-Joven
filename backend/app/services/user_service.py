@@ -91,4 +91,6 @@ class UserService:
             raise ValueError("Error al recuperar los datos actualizados")
             
         updated["_id"] = str(updated["_id"])
-        return UserProfileResponse(**updated)
+        if "_id" in updated:
+            del updated["_id"]        
+        return updated

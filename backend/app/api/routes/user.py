@@ -58,7 +58,7 @@ async def colse_all_sessions(request: Request, response: Response, current_user:
     response.delete_cookie("session_token")
     return {"message": f"Se cerraron {count} sesiones en todos los dispositivos"}
 
-@router.put("/update", response_model=UserProfileResponse)
+@router.put("/update")
 async def update_user(request: Request, 
                       response: Response,
                       user_update: UserUpdate, 
