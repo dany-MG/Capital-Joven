@@ -363,7 +363,7 @@ const bodyData = {
              <button 
                type="submit" 
                disabled={loading} 
-               className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-black transition-all duration-300 transform hover:-translate-y-1 shadow-lg cursor-pointer ${loading ? 'bg-emerald-500/50 cursor-wait' : 'bg-emerald-400 hover:bg-emerald-500 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]'}`}
+               className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-darkbg transition-all duration-300 transform hover:-translate-y-1 shadow-lg cursor-pointer ${loading ? 'bg-emerald-500/50 cursor-wait' : 'bg-emerald-500 hover:bg-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]'}`}
              >
                 {loading ? <><Loader2 size={20} className="animate-spin" /> Guardando...</> : <><Save size={20} /> Guardar Cambios</>}
              </button>
