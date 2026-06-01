@@ -44,7 +44,6 @@ export const SavingView = () => {
       const res = await fetch(`${API_BASE_URL}/`, fetchOptions('GET'));
       
       if (res.status === 404) {
-        // Tu backend devuelve 404 si el usuario no tiene metas aún
         setGoals([]);
         return;
       }
@@ -53,7 +52,6 @@ export const SavingView = () => {
       
       const data = await res.json();
       
-      // Mapeamos los campos snake_case de Python a camelCase de React
       const mappedGoals = data.map(g => ({
         id: g.id,
         title: g.title,
@@ -84,8 +82,7 @@ export const SavingView = () => {
   // CREAR META (POST)
   const handleCreateGoal = async (e) => {
     e.preventDefault();
-    
-    // Adaptamos el objeto al esquema "CreateGoal" de tu Pydantic
+  
     const backendGoalData = {
       title: newGoal.title,
       description: newGoal.description,
@@ -100,7 +97,6 @@ export const SavingView = () => {
       
       if (!res.ok) throw new Error('No se pudo registrar la meta');
       
-      // Recargamos la lista desde el servidor para asegurar sincronía completa con Mongo
       await fetchGoals();
       
       setShowForm(false);
