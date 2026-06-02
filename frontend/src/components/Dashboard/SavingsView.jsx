@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Calendar, Plus, Loader2, Check, X, Info, ChevronRight, TrendingUp, Trash2 } from 'lucide-react';
+import { Target, Calendar, Plus, Loader2, Check, X, Info, ChevronRight, TrendingUp, Trash2, Edit2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export const SavingView = () => {
@@ -9,8 +9,9 @@ export const SavingView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [goals, setGoals] = useState([]); 
   const [showForm, setShowForm] = useState(false); 
+  const [editGoalId, setEditGoalId] = useState(null); // NUEVO: Rastrea si estamos editando
   
-  const [newGoal, setNewGoal] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     targetAmount: '',
@@ -39,7 +40,7 @@ export const SavingView = () => {
           title: "Fondo de Emergencia",
           description: "Reservado para imprevistos médicos.",
           targetAmount: 5000,
-          currentAmount: 5000, // <--- Simulamos esta como completada para que veas el efecto
+          currentAmount: 5000, 
           startDate: "2024-01-01",
           endDate: "2024-06-30"
         },
@@ -61,27 +62,66 @@ export const SavingView = () => {
   // 3. LÓGICA DE ACCIONES (POST / PUT / DELETE)
   // =====================================================================
 
-  // CREAR META (POST)
-  const handleCreateGoal = (e) => {
+  // CREAR O ACTUALIZAR META (POST / PUT)
+  const handleSaveGoal = (e) => {
     e.preventDefault();
     
-    const goalToSave = {
-      ...newGoal,
-      id: Date.now(),
-      currentAmount: 0,
-      targetAmount: Number(newGoal.targetAmount)
-    };
+    if (editGoalId) {
+      // MODO EDICIÓN
+      // TODO: BACKEND - PUT a /api/savings/goals/${editGoalId} enviando formData
+      setGoals(prevGoals => prevGoals.map(goal => 
+        goal.id === editGoalId 
+          ? { ...goal, ...formData, targetAmount: Number(formData.targetAmount) }
+          : goal
+      ));
 
-    // TODO: BACKEND - POST a /api/savings/goals
-    setGoals([...goals, goalToSave]);
-    setShowForm(false);
-    setNewGoal({ title: '', description: '', targetAmount: '', startDate: '', endDate: '' });
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: 'Meta actualizada exitosamente', showConfirmButton: false, timer: 3000,
+        background: '#101010', color: '#10b981'
+      });
+    } else {
+      // MODO CREACIÓN
+      const goalToSave = {
+        ...formData,
+        id: Date.now(),
+        currentAmount: 0,
+        targetAmount: Number(formData.targetAmount)
+      };
 
-    Swal.fire({
-      toast: true, position: 'bottom-end', icon: 'success',
-      title: 'Meta creada exitosamente', showConfirmButton: false, timer: 3000,
-      background: '#101010', color: '#10b981'
+      // TODO: BACKEND - POST a /api/savings/goals enviando goalToSave
+      setGoals([...goals, goalToSave]);
+
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: 'Meta creada exitosamente', showConfirmButton: false, timer: 3000,
+        background: '#101010', color: '#10b981'
+      });
+    }
+
+    resetForm();
+  };
+
+  // PREPARAR FORMULARIO PARA EDICIÓN
+  const handleEditClick = (goal) => {
+    setFormData({
+      title: goal.title,
+      description: goal.description,
+      targetAmount: goal.targetAmount,
+      startDate: goal.startDate,
+      endDate: goal.endDate
     });
+    setEditGoalId(goal.id);
+    setShowForm(true);
+    // Scroll suave hacia el formulario si está muy abajo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // LIMPIAR FORMULARIO
+  const resetForm = () => {
+    setShowForm(false);
+    setEditGoalId(null);
+    setFormData({ title: '', description: '', targetAmount: '', startDate: '', endDate: '' });
   };
 
   // ABONAR A META (PUT)
@@ -132,16 +172,6 @@ export const SavingView = () => {
 
     if (result.isConfirmed) {
       // TODO: BACKEND - DELETE a /api/savings/goals/${goalId}
-      /* Ejemplo de implementación real:
-      try {
-        const response = await fetch(`/api/savings/goals/${goalId}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error("Fallo al eliminar");
-      } catch (error) {
-        return Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
-      }
-      */
-
-      // Actualización de UI Frontend
       setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
 
       Swal.fire({
@@ -182,7 +212,7 @@ export const SavingView = () => {
         </div>
         
         <button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={showForm ? resetForm : () => setShowForm(true)}
           className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-lg cursor-pointer ${
             showForm ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-emerald-500 text-black hover:bg-emerald-400'
           }`}
@@ -191,17 +221,19 @@ export const SavingView = () => {
         </button>
       </div>
 
-      {/* FORMULARIO DE NUEVA META (Condicional) */}
+      {/* FORMULARIO DE NUEVA / EDITAR META */}
       {showForm && (
         <div className="bg-darkpanel border border-emerald-500/30 rounded-3xl p-8 shadow-2xl animate-in slide-in-from-top-4 duration-300">
-          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">Configurar Nueva Meta</h3>
-          <form onSubmit={handleCreateGoal} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">
+            {editGoalId ? 'Editar Meta Existente' : 'Configurar Nueva Meta'}
+          </h3>
+          <form onSubmit={handleSaveGoal} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Nombre de la Meta</label>
                 <input 
                   required type="text" placeholder="Ej. Viaje a la playa" 
-                  value={newGoal.title} onChange={e => setNewGoal({...newGoal, title: e.target.value})}
+                  value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50"
                 />
               </div>
@@ -209,7 +241,7 @@ export const SavingView = () => {
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Descripción</label>
                 <textarea 
                   placeholder="¿Para qué es este ahorro?" 
-                  value={newGoal.description} onChange={e => setNewGoal({...newGoal, description: e.target.value})}
+                  value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 h-24 resize-none"
                 />
               </div>
@@ -219,7 +251,7 @@ export const SavingView = () => {
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Monto Objetivo ($)</label>
                 <input 
                   required type="number" placeholder="0.00" 
-                  value={newGoal.targetAmount} onChange={e => setNewGoal({...newGoal, targetAmount: e.target.value})}
+                  value={formData.targetAmount} onChange={e => setFormData({...formData, targetAmount: e.target.value})}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50"
                 />
               </div>
@@ -228,7 +260,7 @@ export const SavingView = () => {
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Inicio</label>
                   <input 
                     required type="date" 
-                    value={newGoal.startDate} onChange={e => setNewGoal({...newGoal, startDate: e.target.value})}
+                    value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none focus:border-emerald-500/50 scheme-dark"
                   />
                 </div>
@@ -236,13 +268,13 @@ export const SavingView = () => {
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Fin Esperado</label>
                   <input 
                     required type="date" 
-                    value={newGoal.endDate} onChange={e => setNewGoal({...newGoal, endDate: e.target.value})}
+                    value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none focus:border-emerald-500/50 scheme-dark"
                   />
                 </div>
               </div>
               <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3.5 rounded-xl transition-all mt-4">
-                Guardar Meta
+                {editGoalId ? 'Actualizar Meta' : 'Guardar Meta'}
               </button>
             </div>
           </form>
@@ -253,7 +285,7 @@ export const SavingView = () => {
       <div className="bg-darkpanel rounded-3xl border border-white/5 shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-white/5 text-gray-400 text-sm font-bold uppercase tracking-wider">
+            <thead className="bg-white/5 text-gray-400 text-xs font-bold uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-5">Objetivo</th>
                 <th className="px-6 py-5">Progreso Visual</th>
@@ -268,18 +300,17 @@ export const SavingView = () => {
                 const isCompleted = goal.currentAmount >= goal.targetAmount;
 
                 return (
-                  // Si está completada, añadimos un fondo verde sutil, si no, el hover normal
                   <tr key={goal.id} className={`transition-colors group ${isCompleted ? 'bg-emerald-500/10 ' : 'hover:bg-white/2'}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-white font-[Satoshi-Bold]">{goal.title}</p>
                         {isCompleted && (
-                          <span className="bg-emerald-500/20 text-emerald-400 text-sm px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 animate-in zoom-in duration-300">
+                          <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/30 animate-in zoom-in duration-300">
                             ¡Completada!
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm max-w-fit ${isCompleted ? 'text-emerald-400/80 font-medium' : 'text-gray-500'}`}>
+                      <p className={`text-xs truncate max-w-50 ${isCompleted ? 'text-emerald-400/80 font-medium' : 'text-gray-500'}`}>
                         {isCompleted ? "🎉 ¡Felicidades! Meta alcanzada." : goal.description}
                       </p>
                     </td>
@@ -291,7 +322,7 @@ export const SavingView = () => {
                             style={{ width: `${progress}%` }}
                           ></div>
                         </div>
-                        <span className={`text-sm font-bold ${isCompleted ? 'text-emerald-400' : 'text-gray-400'}`}>{progress}%</span>
+                        <span className={`text-xs font-bold ${isCompleted ? 'text-emerald-400' : 'text-gray-400'}`}>{progress}%</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -301,13 +332,14 @@ export const SavingView = () => {
                       <p className="text-gray-500 text-xs">de ${goal.targetAmount.toLocaleString('es-MX')}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col text-sm text-gray-400">
+                      <div className="flex flex-col text-xs text-gray-400">
                         <span className="flex items-center gap-1"><Calendar size={12}/> {goal.startDate}</span>
                         <span className="flex items-center gap-1 mt-1"><Check size={12}/> {goal.endDate}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center items-center gap-2">
+                        {/* Botón Añadir Fondos */}
                         <button 
                           onClick={() => handleAddFunds(goal.id)}
                           disabled={isCompleted}
@@ -321,7 +353,16 @@ export const SavingView = () => {
                           {isCompleted ? <Check size={18} /> : <Plus size={18} />}
                         </button>
                         
-                        {/* Botón para eliminar meta con el evento onClick conectado */}
+                        {/* Botón Editar Meta */}
+                        <button 
+                          onClick={() => handleEditClick(goal)}
+                          className="p-2.5 rounded-xl border border-white/10 text-gray-500 hover:text-cyan-400 hover:border-cyan-500/30 hover:bg-cyan-500/10 transition-all cursor-pointer"
+                          title="Editar meta"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+
+                        {/* Botón Eliminar Meta */}
                         <button 
                           onClick={() => handleDeleteGoal(goal.id)}
                           className="p-2.5 rounded-xl border border-white/10 text-gray-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all cursor-pointer"
@@ -355,8 +396,8 @@ export const SavingView = () => {
           <TrendingUp size={24} />
         </div>
         <div>
-          <h4 className="text-white font-[Satoshi-Bold] text-xl">Consejo de Ahorro</h4>
-          <p className="text-gray-400 text-md mt-1">
+          <h4 className="text-white font-[Satoshi-Bold]">Consejo de Ahorro</h4>
+          <p className="text-gray-400 text-sm mt-1">
             "La mejor forma de alcanzar tus metas es automatizando un pequeño porcentaje de tus ingresos apenas los recibas. 
             Incluso $100 semanales pueden marcar la diferencia al final del año."
           </p>
