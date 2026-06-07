@@ -29,6 +29,7 @@ class CreateBill(BaseModel):
     title: str
     amount: float
     date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
     category: CategoryBill
     description: Optional[str] = None
     frequency: Frequency
@@ -39,20 +40,22 @@ class UpdateBill(BaseModel):
     categoty: Optional[CategoryBill] = None
     description: Optional[str] = None
     frequency: Optional[Frequency] = None
-    
+    date: Optional[datetime]
+
 class AllBillResponse(BaseModel):
     bill_id: str = Field(alias="_id")
     title: str
     amount: float
+    date: datetime
+    category: str
     
 class BillResponse(BaseModel):
     bill_id: str = Field(alias="_id")
     title: str
     amount: float
-    date: datetime
+    date: str
     category: CategoryBill
     description: Optional[str] = None
-    frequency: Frequency
     
     class Config:
         from_attributes = True

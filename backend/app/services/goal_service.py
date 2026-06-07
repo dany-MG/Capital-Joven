@@ -97,7 +97,7 @@ class GoalService:
 
         await self.db.goal.update_one(
             {"_id": ObjectId(goal_id)},
-            {"$set": {"current_amount": amount}}
+            {"$inc": {"current_amount": amount}}
         )
 
         updated = await self.db.goal.find_one({"_id": ObjectId(goal_id)})

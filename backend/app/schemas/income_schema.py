@@ -21,6 +21,7 @@ class CreateIncome(BaseModel):
     title: str
     amount: float = Field(..., gt=0)
     date: Optional[datetime] = None
+    end_date : Optional[datetime] = None
     origin: SourceIncome
     description: Optional[str] = None
     frequency: Frequency
@@ -31,11 +32,14 @@ class UpdateIncome(BaseModel):
     origin: Optional[SourceIncome] = None
     description: Optional[str] = None
     frequency: Optional[Frequency] = None
+    date: Optional[datetime] = None
     
 class AllIncomeResponse(BaseModel):
     income_id: str = Field(alias="_id")
     title: str
     amount: float
+    date: datetime
+    origin: str
     
 class IncomeResponse(BaseModel):
     income_id: str = Field(alias="_id")
@@ -44,7 +48,6 @@ class IncomeResponse(BaseModel):
     date: datetime
     origin: SourceIncome
     description: Optional[str]
-    frequency: Frequency
     
     class Config:
         from_attributes = True

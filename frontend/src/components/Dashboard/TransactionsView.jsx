@@ -108,7 +108,8 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
       amount: amount,
       description: newTransaction.description,
       date: baseDate.toISOString(),
-      frequency: newTransaction.isRecurring ? newTransaction.frequency : "Único"
+      frequency: newTransaction.isRecurring ? newTransaction.frequency : "Único",
+      ...(newTransaction.isRecurring && newTransaction.endDate && {end_date: new Date(`${newTransaction.endDate}T23:59:59`).toISOString()})
     };
 
     // categorias adaptadas
