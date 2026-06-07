@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, TrendingUp as TrendingUpIcon, AlertCircle, Lightbulb, Loader2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-import { MOCK_CHART_DATA, MOCK_RECENT_TRANSACTIONS } from './MockData';
-
 // Componente reutilizable para las tarjetas de métricas
 const StatsCard = ({ title, value, trend, isPositive, icon: Icon, colorType }) => {
   const isEmerald = colorType === 'emerald';
@@ -51,45 +49,43 @@ export const HomeView = () => {
     metaAhorroObjetivo: 0
   });
 
+  const [dailyTip, setDailyTip] = useState({
+    title: "", 
+    description: ""
+  });
+
   // =====================================================================
   // 2. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
   useEffect(() => {
-    // TODO: BACKEND - Aquí deben hacer el fetch de los datos del Dashboard
-    /* Ejemplo de implementación real:
+    const API_URL = "http://localhost:8000";
     Promise.all([
-      fetch('/api/dashboard/metrics').then(res => res.json()),
-      fetch('/api/dashboard/trend-chart').then(res => res.json()),
-      fetch('/api/transactions/recent?limit=5').then(res => res.json())
-    ])
-    .then(([metricsData, chartRes, transactionsRes]) => {
+      fetch(`${API_URL}/dashboard/metrics`, {method: "GET", credentials: "include"}).then(res => {
+        if(!res.ok) throw new Error("Error al cargar las métricas");
+        return res.json();
+      }),
+      fetch(`${API_URL}/dashboard/chart`, {method: "GET", credentials: "include"}).then(res => {
+        if(!res.ok) throw new Error("Error al obtener las predicciones");
+        return res.json();
+      }),
+      fetch(`${API_URL}/dashboard/recent_transactions`, {method: "GET", credentials: "include"}).then(res => {
+        if(!res.ok) throw new Error("Error al obtener las transacciones más recientes");
+        return res.json();
+      }),
+      fetch(`${API_URL}/dashboard/tips`, {method: "GET", credentials: "include"}).then(res => {
+        if(!res.ok) throw new Error("Error al obtener el tip del día");
+        return res.json();
+      })
+    ]).then(([metricsData, chartData, transactionsData, tipData]) => {
       setMetrics(metricsData);
-      setChartData(chartRes);
-      setRecentTransactions(transactionsRes);
+      setChartData(chartData);
+      setRecentTransactions(transactionsData);
+      setDailyTip(tipData);
       setIsLoading(false);
-    })
-    .catch(error => console.error("Error al cargar el dashboard:", error));
-    */
-
-    // Simulación temporal para el Frontend
-    setTimeout(() => {
-      setMetrics({
-        balanceTotal: 3325,
-        balanceTrend: 12,
-        ingresosMensuales: 3850,
-        ingresosTrend: 5,
-        gastosTotales: 525,
-        gastosTrend: -2,
-        prediccionGastoActual: 850,
-        prediccionProyeccion: 1250,
-        metaAhorroNombre: "Vacaciones de Verano",
-        metaAhorroActual: 2450,
-        metaAhorroObjetivo: 5000
-      });
-      setChartData(MOCK_CHART_DATA);
-      setRecentTransactions(MOCK_RECENT_TRANSACTIONS);
+    }).catch(error => {
+      console.error("Error al cargar el dashboard: ", error);
       setIsLoading(false);
-    }, 1000);
+    });
   }, []);
 
   // =====================================================================
@@ -270,8 +266,8 @@ export const HomeView = () => {
             <h3 className="text-xl font-[Satoshi-Bold] text-white mb-2 relative z-10">Meta de Ahorro</h3>
             <p className="text-emerald-400 text-sm mb-6 relative z-10">{metrics.metaAhorroNombre || "Sin meta activa"}</p>
             <div className="flex justify-between items-end mb-3 relative z-10">
-              <span className="text-3xl font-bold text-white">${metrics.metaAhorroActual.toLocaleString('es-MX')}</span>
-              <span className="text-sm text-gray-400">de ${metrics.metaAhorroObjetivo.toLocaleString('es-MX')}</span>
+              <span className="text-3xl font-bold text-white">${(metrics.metaAhorroActual??0).toLocaleString('es-MX')}</span>
+              <span className="text-sm text-gray-400">de ${(metrics.metaAhorroObjetivo??0).toLocaleString('es-MX')}</span>
             </div>
             <div className="w-full bg-black/40 h-2.5 rounded-full overflow-hidden relative z-10">
               <div className="bg-[linear-gradient(to_right,#34d399,#22d3ee)] h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" style={{ width: `${metaAhorroPorcentaje}%` }}></div>
@@ -286,9 +282,9 @@ export const HomeView = () => {
               </div>
             </div>
             {/* TODO: BACKEND - Podrían inyectar un tip aleatorio distinto cada día */}
-            <h4 className="font-[Satoshi-Bold] text-white mb-2">Evita Deudas Hormiga</h4>
+            <h4 className="font-[Satoshi-Bold] text-white mb-2">{dailyTip.title || "Sin tip del día"}</h4>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Registra cada pequeño gasto. Ese café diario suma más de $900 al mes. ¡Mantén el control!
+              {dailyTip.description || "No se encunetra disponible el tip del día de hoy :("}
             </p>
           </div>
         </div>

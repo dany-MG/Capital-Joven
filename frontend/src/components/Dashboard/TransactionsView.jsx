@@ -116,6 +116,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
       let originMapping = "Otros";
       if (newTransaction.category === "Salario") originMapping = "Nomina";
       if (newTransaction.category === "Freelance") originMapping = "Ventas";
+      if (newTransaction.category === "Beca") originMapping = "Beca";
       if (newTransaction.category === "Inversiones") originMapping = "Inversiones";
       if (newTransaction.category === "Otros") originMapping = "Otros";
       backendPayload.origin = originMapping;
