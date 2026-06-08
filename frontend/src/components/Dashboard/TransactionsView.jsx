@@ -9,13 +9,13 @@ import { es } from 'date-fns/locale';
 import Swal from 'sweetalert2';
 
 const getCategoryIcon = (category) => {
-  const lowerCat = category.toLowerCase();
+  const lowerCat = category ? category.toLowerCase() : '';
   if (lowerCat.includes('comida') || lowerCat.includes('food')) return ShoppingBag;
   if (lowerCat.includes('servicios') || lowerCat.includes('utilities')) return Zap;
   if (lowerCat.includes('transporte') || lowerCat.includes('transport')) return Car;
-  if (lowerCat.includes('salario') || lowerCat.includes('salary')) return Wallet;
-  if(lowerCat.includes('beca') || lowerCat.includes('scholarship')) return Wallet;
-  if (lowerCat.includes('freelance') || lowerCat.includes('project')) return Briefcase;
+  if (lowerCat.includes('salario') || lowerCat.includes('salary') || lowerCat.includes('nomina')) return Wallet;
+  if (lowerCat.includes('beca') || lowerCat.includes('scholarship')) return Wallet;
+  if (lowerCat.includes('freelance') || lowerCat.includes('project') || lowerCat.includes('ventas')) return Briefcase;
   if (lowerCat.includes('salud') || lowerCat.includes('health')) return HeartPulse;
   if (lowerCat.includes('entretenimiento') || lowerCat.includes('entertainment')) return Film;
   if (lowerCat.includes('casa') || lowerCat.includes('home')) return Home;
@@ -56,12 +56,12 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
   const openEditModal = (t) => {
     // Rellenamos el formulario con los datos de la transacción seleccionada
     setNewTransaction({
-      amount: Math.abs(t.amount), // Mostramos el valor absoluto en el input
+      amount: Math.abs(t.amount), 
       description: t.description,
       category: t.category,
       type: t.type,
-      date: t.date.split('T')[0], // Extraemos solo la fecha YYYY-MM-DD
-      isRecurring: false, // La edición de recurrencias suele ser más compleja, la mantenemos simple
+      date: t.date ? t.date.split('T')[0] : format(new Date(), 'yyyy-MM-dd'), 
+      isRecurring: false, 
       frequency: 'Mensual',
       endDate: ''
     });
@@ -90,95 +90,90 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
     const baseDate = new Date(`${newTransaction.date}T${currentTime}`);
     const amount = parseFloat(newTransaction.amount);
     
-    let payload = null;
-
-    if (!isEditing && newTransaction.isRecurring) {
-      // Lógica de creación múltiple (Ya existente)
-      const generatedTransactions = [];
-      let currentDate = baseDate;
-      const endLimit = newTransaction.endDate ? new Date(`${newTransaction.endDate}T23:59:59`) : addMonths(baseDate, 12);
-      
-      let occurrences = 0;
-      while (isBefore(currentDate, endLimit) || currentDate.getTime() === endLimit.getTime()) {
-        if (occurrences > 50) break; 
-        
-        generatedTransactions.push({
-          amount,
-          description: `${newTransaction.description} (Repetitivo)`,
-          category: newTransaction.category,
-          type: newTransaction.type,
-          date: currentDate.toISOString().slice(0, 19) 
-        });
-        
-        if (newTransaction.frequency === 'Mensual') currentDate = addMonths(currentDate, 1);
-        else if (newTransaction.frequency === 'Quincenal') currentDate = addDays(currentDate, 15);
-        else if (newTransaction.frequency === 'Semanal') currentDate = addWeeks(currentDate, 1);
-        occurrences++;
-      }
-      payload = generatedTransactions;
+    const isincome = newTransaction.type === 'income';
+    let endpoint = '';
+    if (isEditing) {
+      endpoint = isincome
+        ? `http://localhost:8000/income/update/${editId}`
+        : `http://localhost:8000/bill/update/${editId}`;
     } else {
-      payload = {
-        amount,
-        description: newTransaction.description,
-        category: newTransaction.category,
-        type: newTransaction.type,
-        date: baseDate.toISOString().slice(0, 19)
-      };
+      endpoint = isincome 
+        ? 'http://localhost:8000/income/register' 
+        : 'http://localhost:8000/bill/register';
+    }
+    
+    // payload mapeado
+    let backendPayload = {
+      title: newTransaction.description.substring(0, 20),
+      amount: amount,
+      description: newTransaction.description,
+      date: baseDate.toISOString(),
+      frequency: newTransaction.isRecurring ? newTransaction.frequency : "Único",
+      ...(newTransaction.isRecurring && newTransaction.endDate && {end_date: new Date(`${newTransaction.endDate}T23:59:59`).toISOString()})
+    };
+
+    // categorias adaptadas
+    if (isincome) {
+      let originMapping = "Otros";
+      if (newTransaction.category === "Salario") originMapping = "Nomina";
+      if (newTransaction.category === "Freelance") originMapping = "Ventas";
+      if (newTransaction.category === "Beca") originMapping = "Beca";
+      if (newTransaction.category === "Inversiones") originMapping = "Inversiones";
+      if (newTransaction.category === "Otros") originMapping = "Otros";
+      backendPayload.origin = originMapping;
+    } else {
+      backendPayload.category = newTransaction.category;
     }
 
-    // TODO: BACKEND - Lógica PUT o POST dependiendo del estado
-    /* try {
-      if (isEditing) {
-        // Petición PUT para actualizar
-        const res = await fetch(`/api/transactions/${editId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const updatedData = await res.json();
-        if (onUpdateTransaction) onUpdateTransaction(updatedData);
-      } else {
-        // Petición POST para crear
-        const res = await fetch('/api/transactions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const savedData = await res.json();
-        if (onAddTransaction) onAddTransaction(savedData);
-      }
-    } catch (error) { ... }
-    */
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(backendPayload)
+      });
 
-    // Simulación Frontend
-    setTimeout(() => {
-      if (isEditing) {
-        // Simulamos la actualización enviando el objeto modificado al padre
-        if (onUpdateTransaction) onUpdateTransaction({ ...payload, id: editId });
-        Swal.fire({
-          toast: true, position: 'bottom-end', icon: 'success', 
-          title: 'Transacción actualizada', showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-        });
-      } else {
-        if (onAddTransaction) onAddTransaction({ ...payload, id: Date.now() });
-        Swal.fire({
-          toast: true, position: 'bottom-end', icon: 'success', 
-          title: 'Transacción guardada', showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-        });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || 'Error al guardar en el servidor');
       }
+
+      await response.json(); // Consumimos el {"message": "..."} del Backend
+
+      const localNewTx = {
+        id: Math.random().toString(36).substr(2, 9), 
+        date: baseDate.toISOString(),
+        category: isincome ? (backendPayload.origin || 'Otros') : (backendPayload.category || 'Otros'),
+        description: newTransaction.description,
+        amount: amount,
+        type: newTransaction.type
+      };
+
+      if (onAddTransaction) onAddTransaction(localNewTx);
       
-      setIsSubmitting(false);
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success', 
+        title: 'Transacción guardada exitosamente', showConfirmButton: false, 
+        timer: 3000, background: '#101010', color: '#10b981'
+      });
+
       handleModalClose();
-    }, 800);
+
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', error.message || 'No se pudo procesar la transacción', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // =====================================================================
-  // 3. LÓGICA DE ELIMINACIÓN (DELETE)
+  // 3. LÓGICA DE ELIMINACIÓN (DELETE conectado al Backend)
   // =====================================================================
-  const handleDeleteClick = async (id) => {
+  const handleDeleteClick = async (id, type) => {
     const result = await Swal.fire({
       title: '¿Eliminar transacción?',
-      text: "Esta acción no afectará las transacciones recurrentes futuras, solo este registro.",
+      text: "Esta acción eliminará el registro de la base de datos permanentemente.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -190,21 +185,35 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
     });
 
     if (result.isConfirmed) {
-      // TODO: BACKEND - Petición DELETE
-      /*
-      try {
-        await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
-        if (onDeleteTransaction) onDeleteTransaction(id);
-      } catch (error) { ... }
-      */
+      // Determinamos ruta según el tipo unificado ('income' o 'expense')
+      const isIncome = type === 'income';
+      const deleteEndpoint = isIncome 
+        ? `http://localhost:8000/income/delete/${id}`
+        : `http://localhost:8000/bill/delete/${id}`;
 
-      // Simulación Frontend
-      if (onDeleteTransaction) onDeleteTransaction(id);
-      
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success', 
-        title: 'Registro eliminado', showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-      });
+      try {
+        const response = await fetch(deleteEndpoint, { 
+          method: 'DELETE',
+          credentials: 'include' 
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.detail || 'Ocurrió un error al eliminar en el servidor');
+        }
+
+        // Avisamos a MainApp para remover la fila local de inmediato
+        if (onDeleteTransaction) onDeleteTransaction(id);
+        
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success', 
+          title: 'Registro eliminado', showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+        });
+
+      } catch (error) {
+        console.error(error);
+        Swal.fire('Error', error.message || 'No se pudo eliminar el registro', 'error');
+      }
     }
   };
 
@@ -216,11 +225,17 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
     const end = endOfMonth(currentMonth);
 
     return transactions.filter(t => {
-      const date = parseISO(t.date);
-      const inMonth = isWithinInterval(date, { start, end });
-      const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            (t.category || '').toLowerCase().includes(searchTerm.toLowerCase());
-      return inMonth && matchesSearch;
+      if (!t || !t.date) return false;
+
+      try {
+        const date = parseISO(t.date);
+        const inMonth = isWithinInterval(date, { start, end });
+        const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              (t.category || '').toLowerCase().includes(searchTerm.toLowerCase());
+        return inMonth && matchesSearch;
+      } catch (err) {
+        return false;
+      }
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, currentMonth, searchTerm]);
 
@@ -368,7 +383,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
                     <td className={`px-6 py-4 whitespace-nowrap text-right font-[Satoshi-Bold] text-lg ${
                       isIncome ? 'text-emerald-400' : 'text-red-400'
                     }`}>
-                      {isIncome ? '+' : '-'}${Math.abs(t.amount).toLocaleString('es-MX')}
+                      {isIncome ? '+' : '-'}${Math.abs(t.amount).toLocaleString('es-MX', {minimumFractionDigits: 2})}
                     </td>
 
                     {/* 5. Acciones */}
@@ -382,7 +397,7 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
                           <Pencil size={18} />
                         </button>
                         <button 
-                          onClick={() => handleDeleteClick(t.id)}
+                          onClick={() => handleDeleteClick(t.id, t.type)}
                           className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                           title="Eliminar registro"
                         >
@@ -528,7 +543,6 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
                 </div>
               </div>
 
-              {/* Ocultamos las opciones recurrentes si estamos editando para mantenerlo simple */}
               {!isEditing && (
                 <div className="border-t border-white/5 pt-4 mt-2">
                   <label className="flex items-center gap-3 cursor-pointer mb-4 group">

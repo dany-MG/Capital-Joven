@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 
 export const SavingView = () => {
   // =====================================================================
-  // 1. ESTADOS (Multimetas)
+  // 1. ESTADOS
   // =====================================================================
   const [isLoading, setIsLoading] = useState(true);
   const [goals, setGoals] = useState([]); 
@@ -19,43 +19,61 @@ export const SavingView = () => {
     endDate: ''
   });
 
+  // URL Base de tu API
+  const API_BASE_URL = 'http://localhost:8000/goal';
+
+  // Configuración por defecto para fetch con manejo de Cookies (Sesión)
+  const fetchOptions = (method, body = null) => {
+    const options = {
+      method: method,
+      headers: {},
+      credentials: 'include' 
+    };
+    if (body) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    return options;
+  };
+
   // =====================================================================
   // 2. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
-  useEffect(() => {
-    // TODO: BACKEND - GET de todas las metas del usuario
-    /* fetch('/api/savings/goals')
-      .then(res => res.json())
-      .then(data => {
-        setGoals(data);
-        setIsLoading(false);
-      });
-    */
+  const fetchGoals = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`${API_BASE_URL}/`, fetchOptions('GET'));
+      
+      if (res.status === 404) {
+        setGoals([]);
+        return;
+      }
+      
+      if (!res.ok) throw new Error('Error al obtener las metas');
+      
+      const data = await res.json();
+      
+      const mappedGoals = data.map(g => ({
+        id: g.id,
+        title: g.title,
+        description: g.description,
+        targetAmount: g.target_amount,
+        currentAmount: g.current_amount,
+        startDate: g.start_date ? g.start_date.split('T')[0] : '',
+        endDate: g.end_date ? g.end_date.split('T')[0] : ''
+      }));
 
-    // Simulación temporal
-    setTimeout(() => {
-      setGoals([
-        {
-          id: 1,
-          title: "Fondo de Emergencia",
-          description: "Reservado para imprevistos médicos.",
-          targetAmount: 5000,
-          currentAmount: 5000, 
-          startDate: "2024-01-01",
-          endDate: "2024-06-30"
-        },
-        {
-          id: 2,
-          title: "Laptop Nueva",
-          description: "Ahorro para renovación de equipo.",
-          targetAmount: 15000,
-          currentAmount: 1500,
-          startDate: "2024-02-15",
-          endDate: "2024-12-20"
-        }
-      ]);
+      setGoals(mappedGoals);
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', 'No se pudieron cargar tus metas', 'error');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    fetchGoals();
   }, []);
 
   // =====================================================================
@@ -63,43 +81,46 @@ export const SavingView = () => {
   // =====================================================================
 
   // CREAR O ACTUALIZAR META (POST / PUT)
-  const handleSaveGoal = (e) => {
+  const handleSaveGoal = async (e) => {
     e.preventDefault();
-    
-    if (editGoalId) {
-      // MODO EDICIÓN
-      // TODO: BACKEND - PUT a /api/savings/goals/${editGoalId} enviando formData
-      setGoals(prevGoals => prevGoals.map(goal => 
-        goal.id === editGoalId 
-          ? { ...goal, ...formData, targetAmount: Number(formData.targetAmount) }
-          : goal
-      ));
+  
+    // Buscamos la meta actual si estamos editando para no perder su progreso (current_amount)
+    const existingGoal = editGoalId ? goals.find(g => g.id === editGoalId) : null;
+
+    const backendGoalData = {
+      title: formData.title,
+      description: formData.description,
+      target_amount: Number(formData.targetAmount),
+      current_amount: existingGoal ? existingGoal.currentAmount : 0, 
+      start_date: formData.startDate ? new Date(formData.startDate).toISOString() : null,
+      end_date: formData.endDate ? new Date(formData.endDate).toISOString() : null
+    };
+
+    try {
+      let res;
+      if (editGoalId) {
+        // MODO EDICIÓN: PUT al backend
+        // TODO: BACKEND - Verifica si tu ruta es /update/, /edit/ o similar en FastAPI
+        res = await fetch(`${API_BASE_URL}/update/${editGoalId}`, fetchOptions('PUT', backendGoalData));
+      } else {
+        // MODO CREACIÓN: POST al backend
+        res = await fetch(`${API_BASE_URL}/register`, fetchOptions('POST', backendGoalData));
+      }
+      
+      if (!res.ok) throw new Error(editGoalId ? 'No se pudo actualizar la meta' : 'No se pudo registrar la meta');
+      
+      await fetchGoals();
+      resetForm();
 
       Swal.fire({
         toast: true, position: 'bottom-end', icon: 'success',
-        title: 'Meta actualizada exitosamente', showConfirmButton: false, timer: 3000,
+        title: editGoalId ? 'Meta actualizada exitosamente' : 'Meta creada exitosamente', 
+        showConfirmButton: false, timer: 3000,
         background: '#101010', color: '#10b981'
       });
-    } else {
-      // MODO CREACIÓN
-      const goalToSave = {
-        ...formData,
-        id: Date.now(),
-        currentAmount: 0,
-        targetAmount: Number(formData.targetAmount)
-      };
-
-      // TODO: BACKEND - POST a /api/savings/goals enviando goalToSave
-      setGoals([...goals, goalToSave]);
-
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success',
-        title: 'Meta creada exitosamente', showConfirmButton: false, timer: 3000,
-        background: '#101010', color: '#10b981'
-      });
+    } catch (error) {
+      Swal.fire('Error', error.message, 'error');
     }
-
-    resetForm();
   };
 
   // PREPARAR FORMULARIO PARA EDICIÓN
@@ -113,7 +134,6 @@ export const SavingView = () => {
     });
     setEditGoalId(goal.id);
     setShowForm(true);
-    // Scroll suave hacia el formulario si está muy abajo
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -139,19 +159,27 @@ export const SavingView = () => {
 
     if (amount) {
       const numericAmount = Number(amount);
+      const backendAmountData = { amount: numericAmount };
 
-      // TODO: BACKEND - PUT/POST a /api/savings/goals/${goalId}/add-funds
-      setGoals(prevGoals => prevGoals.map(goal => 
-        goal.id === goalId 
-          ? { ...goal, currentAmount: goal.currentAmount + numericAmount } 
-          : goal
-      ));
+      try {
+        const res = await fetch(`${API_BASE_URL}/add/${goalId}`, fetchOptions('PUT', backendAmountData));
+        
+        if (!res.ok) throw new Error('No se pudo añadir el monto');
 
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success',
-        title: `Abono de $${numericAmount} registrado`,
-        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-      });
+        setGoals(prevGoals => prevGoals.map(goal => 
+          goal.id === goalId 
+            ? { ...goal, currentAmount: goal.currentAmount + numericAmount } 
+            : goal
+        ));
+
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success',
+          title: `Abono de $${numericAmount} registrado`,
+          showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+        });
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo registrar el abono', 'error');
+      }
     }
   };
 
@@ -171,14 +199,21 @@ export const SavingView = () => {
     });
 
     if (result.isConfirmed) {
-      // TODO: BACKEND - DELETE a /api/savings/goals/${goalId}
-      setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
+      try {
+        const res = await fetch(`${API_BASE_URL}/delete/${goalId}`, fetchOptions('DELETE'));
+        
+        if (!res.ok) throw new Error("Fallo al eliminar");
+        
+        setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
 
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success',
-        title: 'Meta eliminada correctamente',
-        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-      });
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success',
+          title: 'Meta eliminada correctamente',
+          showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+        });
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
+      }
     }
   };
 
@@ -186,6 +221,7 @@ export const SavingView = () => {
   // 4. CÁLCULOS AUXILIARES
   // =====================================================================
   const calculateProgress = (current, target) => {
+    if (!target || target <= 0) return "0.0";
     return Math.min((current / target) * 100, 100).toFixed(1);
   };
 

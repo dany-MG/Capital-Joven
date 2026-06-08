@@ -6,7 +6,7 @@ import { SettingsView } from './SettingsView';
 import { AnalysisView } from './AnalysisView';
 import { TransactionsView } from './TransactionsView';
 import { HomeView } from './HomeView';  
-import { Bell, User, Settings, ArrowRight, Loader2, Menu } from 'lucide-react';
+import { Settings, ArrowRight, Loader2, Menu } from 'lucide-react';
 import { SavingView } from './SavingsView';
 import { AssesorView } from './AssesorView';
 
@@ -25,7 +25,6 @@ export const MainApp = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  
 
   // =====================================================================
   // 2. REFERENCIAS (DOM & GSAP)
@@ -37,34 +36,82 @@ export const MainApp = () => {
   // 3. CONEXIÓN CON EL BACKEND (Carga inicial de datos)
   // =====================================================================
   useEffect(() => {
-    // TODO: BACKEND - Aquí se deben cargar el perfil del usuario y sus transacciones.
-    /* Ejemplo de implementación real usando axios o fetch:
-    Promise.all([
-      fetch('/api/user/profile').then(res => res.json()),
-      fetch('/api/transactions').then(res => res.json())
-    ])
-    .then(([userData, txData]) => {
-      setUserProfile(userData);
-      setTransactions(txData);
-      setIsLoading(false);
-    })
-    .catch(error => {
-      console.error("Error al cargar datos del backend:", error);
-      setIsLoading(false);
-    });
-    */
+    const cargardatos = async () => {
+      try {
+        setIsLoading(true);
+        
+        const options = {method: 'GET', credentials: 'include'};
+        
+        const [perfilRes, billsRes, incomesRes] = await Promise.all([
+          fetch('http://localhost:8000/user/profile', options),
+          fetch('http://localhost:8000/bill/', options),
+          fetch('http://localhost:8000/income/', options)
+        ]);
 
-    // Simulación temporal (MOCK) para que el frontend siga siendo funcional
-    setTimeout(() => {
-      setUserProfile(MOCK_USER_PROFILE);
-      setTransactions(MOCK_TRANSACTIONS);
-      setIsLoading(false);
-    }, 1200); // 1.2 segundos de carga simulada
+        if (!perfilRes.ok) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const perfilData = await perfilRes.json();
+        
+        setUserProfile({
+          firstname: perfilData.firstname || '',
+          lastname: perfilData.lastname || '',
+          email: perfilData.email || '',
+          university: perfilData.university || 'Sin institución', 
+          avatarUrl: perfilData.avatarUrl || ''
+        });
+
+        // Procesamos los Gastos (Bills) e inyectamos el 'type' de forma implícita
+        let dbTransactions = [];
+
+        if (billsRes.ok) {
+          const billsData = await billsRes.json();
+          dbTransactions = dbTransactions.concat(
+            billsData.map(b => ({
+              id: b.bill_id || b.id || b._id,
+              date: b.date || new Date().toISOString(), // Fallback si la proyección no da fecha
+              category: b.category || 'Otros',
+              description: b.title || b.description,
+              amount: parseFloat(b.amount) || 0,
+              type: 'expense'
+            }))
+          );
+        }
+
+        // Procesamos los Ingresos (Incomes)
+        if (incomesRes.ok) {
+          const incomesData = await incomesRes.json();
+          dbTransactions = dbTransactions.concat(
+            incomesData.map(i => ({
+              id: i.income_id || i.id || i._id,
+              date: i.date || new Date().toISOString(), // Fallback seguro
+              category: i.origin || 'Otros',
+              description: i.title || i.description,
+              amount: parseFloat(i.amount) || 0,
+              type: 'income'
+            }))
+          );
+        }
+
+        setTransactions(dbTransactions);
+
+      } catch (error) {
+        console.error("Error al conectar con el servidor de Capital Joven:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    cargardatos();
   }, []);
 
   // =====================================================================
   // 4. LÓGICA DE INTERFAZ Y EVENTOS
   // =====================================================================
+  
+
   
   // Cierre del menú de usuario al dar clic afuera
   useEffect(() => {
@@ -92,34 +139,25 @@ export const MainApp = () => {
     return () => ctx.revert(); 
   }, [isLoading]);
 
+// Agrega la nueva transacción al inicio de la lista en tiempo real
   const handleAddTransaction = (newTx) => {
-    // TODO: BACKEND - Reemplazar por un POST a la base de datos si deciden no hacerlo directamente en TransactionsView.
-    if (Array.isArray(newTx)) {
-      const newTransactions = newTx.map(tx => ({
-        ...tx,
-        id: Math.random().toString(36).substr(2, 9),
-      }));
-      setTransactions(prev => [...newTransactions, ...prev]);
-    } else {
-      const transaction = { ...newTx, id: Math.random().toString(36).substr(2, 9) };
-      setTransactions(prev => [transaction, ...prev]);
-    }
+    setTransactions(prev => [newTx, ...prev]);
   };
 
-  const handleUpdateTransaction = (updatedTransaction) => {
+  // 🌟 NUEVO: Modifica la transacción existente dentro del estado sin recargar
+  const handleUpdateTransaction = (updatedTx) => {
     setTransactions(prev => 
-      prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+      prev.map(t => (t.id === updatedTx.id ? { ...t, ...updatedTx } : t))
     );
   };
 
-  const handleDeleteTransaction = (idToDelete) => {
-    setTransactions(prev => 
-      prev.filter(t => t.id !== idToDelete)
-    );
+  // 🌟 NUEVO: Remueve la transacción eliminada del estado al instante
+  const handleDeleteTransaction = (id) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
   const showUserInfo = () => setShowUserMenu(!showUserMenu);
-
+  
   // =====================================================================
   // 5. PANTALLA DE CARGA (Loading Screen)
   // =====================================================================
@@ -163,24 +201,25 @@ export const MainApp = () => {
             
             <div>
               <h2 className="text-xl md:text-2xl font-[Satoshi-Bold] text-white">
-                {activeTab === 'dashboard' && 'Tus Finanzas'}
-                {activeTab === 'tips' && 'Tips Financieros'}
-                {activeTab === 'settings' && 'Configuración'}
-                {activeTab === 'analysis' && 'Analicemos tus Finanzas'}
-                {activeTab === 'transactions' && 'Tus Movimientos'}
-                {activeTab === 'goals' && 'Tus Metas de Ahorro'}
+                {activeTab === 'dashboard' && 'Tu Resumen Financiero'}
+                {activeTab === 'tips' && 'Tips para tu Economía'}
+                {activeTab === 'settings' && 'Configuración de Perfil'}
+                {activeTab === 'analysis' && 'Tu Análisis Financiero'}
+                {activeTab === 'transactions' && 'Tus Ingresos y Egresos'}
+                {activeTab === 'goals' && 'Tus Ahorros y Metas'}
                 {activeTab === 'aiAssesor' && 'Tu Asesor IA'}
               </h2>
               {/* Ocultamos el subtítulo en móviles para ahorrar espacio en la barra superior */}
-
+              <p className="text-gray-400 text-sm mt-1 hidden md:block">Panel de Control</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
+            
             <div className="relative" ref={userMenuRef}>
               <div onClick={showUserInfo} className="w-10 h-10 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-600/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300">
                 {/* Fallback inicial de avatar en el botón */}
-                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstName[0]}{userProfile.lastName[0]}</span>
+                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstname?.[0] || ''}{userProfile.lastname?.[0] || ''}</span>
               </div>
 
               {showUserMenu && (
@@ -191,31 +230,27 @@ export const MainApp = () => {
                       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
                       
                       <div className="relative mb-4">
-                        <div className="w-20 h-20 rounded-full bg-emerald-950/50 border-2 border-emerald-500/30 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                          {/* TODO: BACKEND - Usar userProfile.avatarUrl */}
-                          <img 
-                            src={userProfile.avatarUrl || "/avatar-placeholder.png"} 
-                            alt="Foto de perfil" 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement.innerHTML = `<span class="text-emerald-400 text-2xl font-[Satoshi-Bold]">${userProfile.firstName[0]}${userProfile.lastName[0]}</span>`;
-                            }}
-                          />
+                        <div className="w-20 h-20 rounded-full bg-emerald-950/50 border-2 border-emerald-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                          {/* Iniciales del usuario */}
+                          <span className="text-emerald-400 text-3xl font-[Satoshi-Bold] uppercase tracking-wider">
+                            {userProfile.firstname?.charAt(0) || ''}
+                            {userProfile.lastname?.charAt(0) || ''}
+                          </span>
                         </div>
+                        {/* Indicador de estado en línea */}
                         <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-4 border-[#101010] rounded-full"></div>
                       </div>
 
                       <div className="text-center relative z-10">
                         {/* INYECCIÓN DE DATOS DEL ESTADO */}
                         <p className="font-[Satoshi-Bold] text-white text-xl leading-tight">
-                          {userProfile.firstName} {userProfile.lastName}
+                          {userProfile.firstname} {userProfile.lastname}
                         </p>
                         <p className="text-gray-500 text-sm mt-1">{userProfile.email}</p>
                         
                         <div className="mt-4 px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl">
                           <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest">
-                            {userProfile.school}
+                            {userProfile.university}
                           </p>
                         </div>
                       </div>
@@ -249,18 +284,17 @@ export const MainApp = () => {
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'dashboard' && (
               <div className="animate-in fade-in duration-500">
-                <HomeView onNavigateToTransactions={() => setActiveTab('transactions')} />
+                <HomeView />
               </div>
             )}
             {activeTab === 'tips' && <TipsView />}
             
             {/* Ahora le pasamos el userProfile real a SettingsView para que lo editen */}
-            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} />}
+            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} onProfileUpdate={setUserProfile} />}
             
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
-            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction} 
-                                                                                                                                         onUpdateTransaction={handleUpdateTransaction} 
-                                                                                                                                         onDeleteTransaction={handleDeleteTransaction} />}
+            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}onUpdateTransaction={handleUpdateTransaction}
+    onDeleteTransaction={handleDeleteTransaction}/>}
             {activeTab === 'goals' && <SavingView />}
             {activeTab === 'aiAssesor' && <AssesorView />}
           </div>
