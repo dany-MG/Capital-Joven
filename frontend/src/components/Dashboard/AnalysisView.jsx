@@ -18,14 +18,24 @@ export const AnalysisView = ({ transactions = [] }) => {
   // =====================================================================
   // TODO: BACKEND - En producción, esto debe ser `new Date()` para evaluar el mes actual.
   // Se mantiene estático en '2023-10-15' para coincidir con los MOCKS de prueba.
-  const analysisDate = new Date('2023-10-15'); 
+  const analysisDate = new Date(); 
   const currentMonthStr = format(analysisDate, 'yyyy-MM'); // Genera dinámicamente "2023-10"
 
   // =====================================================================
   // 3. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
   useEffect(() => {
-     
+      // TODO: BACKEND - Hacer fetch a la BD para traer el límite mensual del usuario
+      /* Ejemplo real:
+      fetch('/api/user/settings/budget')
+        .then(res => res.json())
+        .then(data => {
+            setBudget(data.monthlyLimit);
+            setTempBudget(data.monthlyLimit);
+            setIsLoadingBudget(false);
+        })
+        .catch(err => console.error("Error cargando el presupuesto:", err));
+      */
 
       // Simulación temporal para el Frontend
       setTimeout(() => {
@@ -75,16 +85,15 @@ export const AnalysisView = ({ transactions = [] }) => {
   // Estos useMemo se encargan de calcular promedios, proyecciones y categorías solos.
 
   const monthlyTransactions = useMemo(() => {
-    return transactions.filter(t => t.date.startsWith(currentMonthStr));
+    return transactions.filter(t => t && t.date && t.date.startsWith(currentMonthStr));
   }, [transactions, currentMonthStr]);
 
   const predictionStats = useMemo(() => {
-    // Evitar divisiones o cálculos raros si el presupuesto sigue cargando
-    if (budget === 0) return { currentSpent: 0, projectedTotal: 0, isOverBudget: false, remainingBudget: 0, dailyAvg: 0 };
+    if (budget === 0) return { currentSpent: 0, projectedTotal: 0, isOverBudget: false, remainingBudget: 0, dailyAvg: 0 }; //no necesario, solo es carga
 
     const currentSpent = monthlyTransactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
     const daysInMonth = getDaysInMonth(analysisDate);
-    const dayOfMonth = analysisDate.getDate();
+    const dayOfMonth = analysisDate.getDate() || 1; //evita dividir con 0
     const dailyAvg = currentSpent / dayOfMonth;
     const projectedTotal = dailyAvg * daysInMonth;
     const isOverBudget = projectedTotal > budget;
@@ -95,7 +104,8 @@ export const AnalysisView = ({ transactions = [] }) => {
   const categoryData = useMemo(() => {
     const categories = {};
     monthlyTransactions.filter(t => t.type === 'expense').forEach(t => {
-        categories[t.category] = (categories[t.category] || 0) + t.amount;
+        const catName = t.category || 'Otros';
+        categories[catName] = (categories[catName] || 0) + t.amount;
     });
     return Object.entries(categories).map(([name, value]) => ({ name, value }));
   }, [monthlyTransactions]);
@@ -103,10 +113,13 @@ export const AnalysisView = ({ transactions = [] }) => {
   const barData = useMemo(() => {
     const days = {};
     monthlyTransactions.forEach(t => {
-      const day = format(parseISO(t.date), 'dd MMM', { locale: es });
-      if (!days[day]) days[day] = { name: day, ingresos: 0, gastos: 0 };
-      if (t.type === 'income') days[day].ingresos += t.amount;
-      else days[day].gastos += t.amount;
+      try {
+        const day = format(parseISO(t.date), 'dd MMM', { locale: es });
+        if (!days[day]) days[day] = { name: day, ingresos: 0, gastos: 0 };
+        if (t.type === 'income') days[day].ingresos += t.amount;
+        else days[day].gastos += t.amount;
+      } catch (e) { //solo por si la fecha se manda mal
+      }
     });
     return Object.values(days).sort((a, b) => a.name.localeCompare(b.name));
   }, [monthlyTransactions]);
@@ -128,7 +141,7 @@ export const AnalysisView = ({ transactions = [] }) => {
   };
 
   // =====================================================================
-  // 6. RENDERIZADO DE LA INTERFAZ
+  // 6. RENDERIZADO DE LA INTERFAZ (Tu diseño original intacto)
   // =====================================================================
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -139,24 +152,24 @@ export const AnalysisView = ({ transactions = [] }) => {
             <Target className="text-emerald-400" />
             Predicción de Cierre de Mes
           </h2>
-          <p className="text-md text-gray-400 mt-1">Basado en tu comportamiento hasta el {format(analysisDate, "d 'de' MMMM", { locale: es })}</p>
+          <p className="text-sm text-gray-400 mt-1">Basado en tu comportamiento hasta el {format(analysisDate, "d 'de' MMMM", { locale: es })}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5">
           <div className="p-6">
-            <p className="text-md font-medium text-gray-400 mb-2">Gasto Actual</p>
+            <p className="text-sm font-medium text-gray-400 mb-2">Gasto Actual</p>
             <h3 className="text-3xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent.toFixed(0)}</h3>
             <div className="mt-4 w-full bg-white/10 h-2 rounded-full overflow-hidden">
               <div className="bg-linear-to-r from-emerald-400 to-cyan-400 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" style={{ width: `${Math.min((predictionStats.currentSpent / (budget || 1)) * 100, 100)}%` }}></div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 mt-2">
               {budget > 0 ? ((predictionStats.currentSpent / budget) * 100).toFixed(1) : 0}% del presupuesto
             </p>
           </div>
 
           <div className="p-6 bg-white/5 relative overflow-hidden group">
             <div className={`absolute inset-0 opacity-10 transition-opacity duration-500 ${predictionStats.isOverBudget ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
-            <p className="text-md font-medium text-gray-400 mb-2 relative z-10">Proyección a Fin de Mes</p>
+            <p className="text-sm font-medium text-gray-400 mb-2 relative z-10">Proyección a Fin de Mes</p>
             <h3 className={`text-3xl font-[Satoshi-Bold] relative z-10 ${predictionStats.isOverBudget ? 'text-red-400' : 'text-emerald-400'}`}>
               ${predictionStats.projectedTotal.toFixed(0)}
             </h3>
@@ -177,7 +190,7 @@ export const AnalysisView = ({ transactions = [] }) => {
 
           {/* TARJETA 3: PRESUPUESTO EDITABLE */}
           <div className="p-6">
-            <p className="text-md font-medium text-gray-400 mb-2">Presupuesto Definido</p>
+            <p className="text-sm font-medium text-gray-400 mb-2">Presupuesto Definido</p>
             
             {/* Animación de carga si aún no llega el presupuesto del Backend */}
             {isLoadingBudget ? (
@@ -226,7 +239,7 @@ export const AnalysisView = ({ transactions = [] }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-100 flex flex-col group hover:border-emerald-500/30 transition-colors duration-300">
-          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">Flujo de Caja Diario</h3>
+          <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6">Flujo de Caja Diario</h3>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -243,7 +256,7 @@ export const AnalysisView = ({ transactions = [] }) => {
         </div>
 
         <div className="bg-darkpanel p-6 rounded-2xl shadow-lg border border-white/5 h-100 flex flex-col group hover:border-cyan-500/30 transition-colors duration-300">
-          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">Distribución de Gastos</h3>
+          <h3 className="text-lg font-[Satoshi-Bold] text-white mb-6">Distribución de Gastos</h3>
           <div className="flex-1 w-full min-h-0 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -259,7 +272,7 @@ export const AnalysisView = ({ transactions = [] }) => {
             
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mb-8">
               <p className="text-xs text-gray-400">Total Gastado</p>
-              <p className="text-xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent}</p>
+              <p className="text-xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent.toFixed(0)}</p>
             </div>
           </div>
         </div>
