@@ -25,24 +25,17 @@ export const AnalysisView = ({ transactions = [] }) => {
   // 3. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
   useEffect(() => {
-      // TODO: BACKEND - Hacer fetch a la BD para traer el límite mensual del usuario
-      /* Ejemplo real:
-      fetch('/api/user/settings/budget')
-        .then(res => res.json())
-        .then(data => {
-            setBudget(data.monthlyLimit);
-            setTempBudget(data.monthlyLimit);
-            setIsLoadingBudget(false);
-        })
-        .catch(err => console.error("Error cargando el presupuesto:", err));
-      */
-
-      // Simulación temporal para el Frontend
+      const savedBudget = localStorage.getItem('capitalJoven_budget');
       setTimeout(() => {
-        setBudget(2000);
+      if (savedBudget) {
+        setBudget(Number(savedBudget));
+        setTempBudget(Number(savedBudget));
+      } else {
+        setBudget(2000); // Valor por defecto si es usuario nuevo
         setTempBudget(2000);
-        setIsLoadingBudget(false);
-      }, 800);
+      }
+      setIsLoadingBudget(false);
+    }, 500);
   }, []);
 
   // =====================================================================
@@ -53,26 +46,18 @@ export const AnalysisView = ({ transactions = [] }) => {
     const newBudget = Number(tempBudget); 
     
     if (newBudget > 0 && newBudget !== budget) {
-      // Actualización Optimista (Cambia en pantalla antes de que responda el server)
       setBudget(newBudget);
       
-      // TODO: BACKEND - Enviar el nuevo presupuesto a la base de datos
-      /* Ejemplo real:
-      fetch('/api/user/settings/budget', {
-        method: 'PUT',
-        body: JSON.stringify({ monthlyLimit: newBudget }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => {
-        if(!res.ok) throw new Error("Fallo al actualizar en el servidor");
-      })
-      .catch(err => {
-        console.error("Error guardando presupuesto", err);
-        // Si el servidor falla, revertimos al presupuesto anterior en pantalla
-        setBudget(budget);
-        setTempBudget(budget);
+      // Lo guardamos en la memoria del navegador para que no se borre
+      localStorage.setItem('capitalJoven_budget', newBudget.toString());
+      
+      // (Opcional) Podemos lanzar una alerta sutil
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: 'Presupuesto actualizado', showConfirmButton: false, timer: 2000,
+        background: '#101010', color: '#10b981'
       });
-      */
+
     } else {
       setTempBudget(budget); // Restaurar si es inválido (ej. si lo dejaron en 0)
     }
