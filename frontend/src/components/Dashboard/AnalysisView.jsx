@@ -18,7 +18,7 @@ export const AnalysisView = ({ transactions = [] }) => {
   // =====================================================================
   // TODO: BACKEND - En producción, esto debe ser `new Date()` para evaluar el mes actual.
   // Se mantiene estático en '2023-10-15' para coincidir con los MOCKS de prueba.
-  const analysisDate = new Date('2023-10-15'); 
+  const analysisDate = new Date(); 
   const currentMonthStr = format(analysisDate, 'yyyy-MM'); // Genera dinámicamente "2023-10"
 
   // =====================================================================
@@ -85,16 +85,15 @@ export const AnalysisView = ({ transactions = [] }) => {
   // Estos useMemo se encargan de calcular promedios, proyecciones y categorías solos.
 
   const monthlyTransactions = useMemo(() => {
-    return transactions.filter(t => t.date.startsWith(currentMonthStr));
+    return transactions.filter(t => t && t.date && t.date.startsWith(currentMonthStr));
   }, [transactions, currentMonthStr]);
 
   const predictionStats = useMemo(() => {
-    // Evitar divisiones o cálculos raros si el presupuesto sigue cargando
-    if (budget === 0) return { currentSpent: 0, projectedTotal: 0, isOverBudget: false, remainingBudget: 0, dailyAvg: 0 };
+    if (budget === 0) return { currentSpent: 0, projectedTotal: 0, isOverBudget: false, remainingBudget: 0, dailyAvg: 0 }; //no necesario, solo es carga
 
     const currentSpent = monthlyTransactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
     const daysInMonth = getDaysInMonth(analysisDate);
-    const dayOfMonth = analysisDate.getDate();
+    const dayOfMonth = analysisDate.getDate() || 1; //evita dividir con 0
     const dailyAvg = currentSpent / dayOfMonth;
     const projectedTotal = dailyAvg * daysInMonth;
     const isOverBudget = projectedTotal > budget;
@@ -105,7 +104,8 @@ export const AnalysisView = ({ transactions = [] }) => {
   const categoryData = useMemo(() => {
     const categories = {};
     monthlyTransactions.filter(t => t.type === 'expense').forEach(t => {
-        categories[t.category] = (categories[t.category] || 0) + t.amount;
+        const catName = t.category || 'Otros';
+        categories[catName] = (categories[catName] || 0) + t.amount;
     });
     return Object.entries(categories).map(([name, value]) => ({ name, value }));
   }, [monthlyTransactions]);
@@ -113,10 +113,13 @@ export const AnalysisView = ({ transactions = [] }) => {
   const barData = useMemo(() => {
     const days = {};
     monthlyTransactions.forEach(t => {
-      const day = format(parseISO(t.date), 'dd MMM', { locale: es });
-      if (!days[day]) days[day] = { name: day, ingresos: 0, gastos: 0 };
-      if (t.type === 'income') days[day].ingresos += t.amount;
-      else days[day].gastos += t.amount;
+      try {
+        const day = format(parseISO(t.date), 'dd MMM', { locale: es });
+        if (!days[day]) days[day] = { name: day, ingresos: 0, gastos: 0 };
+        if (t.type === 'income') days[day].ingresos += t.amount;
+        else days[day].gastos += t.amount;
+      } catch (e) { //solo por si la fecha se manda mal
+      }
     });
     return Object.values(days).sort((a, b) => a.name.localeCompare(b.name));
   }, [monthlyTransactions]);
@@ -138,7 +141,7 @@ export const AnalysisView = ({ transactions = [] }) => {
   };
 
   // =====================================================================
-  // 6. RENDERIZADO DE LA INTERFAZ
+  // 6. RENDERIZADO DE LA INTERFAZ (Tu diseño original intacto)
   // =====================================================================
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -269,7 +272,7 @@ export const AnalysisView = ({ transactions = [] }) => {
             
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mb-8">
               <p className="text-xs text-gray-400">Total Gastado</p>
-              <p className="text-xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent}</p>
+              <p className="text-xl font-[Satoshi-Bold] text-white">${predictionStats.currentSpent.toFixed(0)}</p>
             </div>
           </div>
         </div>

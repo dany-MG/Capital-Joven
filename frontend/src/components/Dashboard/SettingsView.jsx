@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Mail, Briefcase, Camera, Save, Lock, Loader2, Key, Eye, EyeOff } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { lastDayOfDecade } from 'date-fns';
 
 // Recibimos 'initialUserData' desde MainApp para no hacer un GET redundante
-export const SettingsView = ({ initialUserData }) => {
+export const SettingsView = ({ initialUserData, onProfileUpdate }) => {
   // =====================================================================
   // 1. ESTADOS LOCALES Y REFERENCIAS
   // =====================================================================
@@ -11,7 +12,7 @@ export const SettingsView = ({ initialUserData }) => {
   
   // Estado para la información básica
   const [formData, setFormData] = useState(initialUserData || {
-    firstName: '', lastName: '', email: '', school: '', avatarUrl: ''
+    firstname: '', lastname: '', email: '', university: '', avatarUrl: ''
   });
 
   // Estado para el cambio de contraseña
@@ -70,31 +71,46 @@ export const SettingsView = ({ initialUserData }) => {
     }
 
     setLoading(true);
-    
-    // TODO: BACKEND - Petición PUT/PATCH para actualizar el perfil
-    /* Si 'passwords.new' tiene contenido, el backend debe validar que 'passwords.current' 
-    coincida con el hash de la BD antes de encriptar y guardar la nueva.
-    
-    const payload = {
-      ...formData,
-      ...(passwords.new && { currentPassword: passwords.current, newPassword: passwords.new })
+
+const bodyData = {
+       firstname: formData.firstname,
+       lastname: formData.lastname,
+       university: formData.university,
     };
 
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      // Manejar respuesta...
-    } catch (error) { ... }
-    */
+    if (passwords.new) {
+      bodyData.password = passwords.new;
+      bodyData.current_password = passwords.current;
+    }
 
-    // Simulación Frontend
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await fetch('http://localhost:8000/user/update', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bodyData),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || 'Error al actualizar los datos');
+      }
+
+      const updatedUser = await response.json();
       
-      // Limpiar los campos de contraseña después de guardar exitosamente
+      if (onProfileUpdate) {
+        onProfileUpdate({
+          firstname: updatedUser.firstname || updatedUser.firstName || '',
+          lastname: updatedUser.lastname || updatedUser.lastName || '',
+          email: updatedUser.email || '',
+          university: updatedUser.university || '',
+          avatarUrl: updatedUser.avatarUrl || ''
+        });
+      }
+
+      // limp
       setPasswords({ current: '', new: '', confirm: '' });
 
       Swal.fire({
@@ -105,14 +121,26 @@ export const SettingsView = ({ initialUserData }) => {
         color: '#ffffff',
         confirmButtonColor: '#10b981',
         confirmButtonText: 'Entendido',
-        timer : 3000,
+        timer: 3000,
         backdrop: `rgba(0,0,0,0.6)`,
         customClass: {
           popup: 'border border-white/10 rounded-3xl shadow-2xl',
           confirmButton: 'px-8 py-3 rounded-full font-bold text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300 hover:scale-105',
         }
       });
-    }, 1500);
+
+    } catch (error) {
+      Swal.fire({
+        title: 'Error al actualizar',
+        text: error.message || 'Ocurrió un problema de comunicación con el servidor.',
+        icon: 'error',
+        background: '#101010',
+        color: '#ffffff',
+        confirmButtonColor: '#ef4444'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // =====================================================================
@@ -132,8 +160,15 @@ export const SettingsView = ({ initialUserData }) => {
     reader.readAsDataURL(file);
   };
 
-  const handleLogout = () => {
-    // TODO: BACKEND - Limpiar sesión
+  const handleLogout = async() => {
+    try{
+      await fetch('http://localhost:8000/user/logout',{
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error){
+      console.error("error al cerrar sesión", error);
+    }
     window.location.href = '/';
   };
 
@@ -177,7 +212,7 @@ export const SettingsView = ({ initialUserData }) => {
                   <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover group-hover/avatar:opacity-50 transition-opacity" />
                 ) : (
                   <span className="group-hover/avatar:opacity-50 transition-opacity">
-                    {formData.firstName?.[0] || ''}{formData.lastName?.[0] || ''}
+                    {formData.firstname?.[0] || ''}{formData.lastname?.[0] || ''}
                   </span>
                 )}
                 
@@ -195,7 +230,7 @@ export const SettingsView = ({ initialUserData }) => {
               </button>
             </div>
             
-            <h3 className="text-xl font-[Satoshi-Bold] text-white relative z-10">{formData.firstName} {formData.lastName}</h3>
+            <h3 className="text-xl font-[Satoshi-Bold] text-white relative z-10">{formData.firstname} {formData.lastname}</h3>
             <p className="text-gray-400 text-sm relative z-10">{formData.email}</p>
           </div>
 
@@ -227,7 +262,7 @@ export const SettingsView = ({ initialUserData }) => {
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
+                  <input type="text" name="firstname" value={formData.firstname} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
                 </div>
               </div>
 
@@ -235,7 +270,7 @@ export const SettingsView = ({ initialUserData }) => {
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Apellido</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
+                  <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
                 </div>
               </div>
 
@@ -251,7 +286,7 @@ export const SettingsView = ({ initialUserData }) => {
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Escuela / Institución</label>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input type="text" name="school" value={formData.school} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
+                  <input type="text" name="university" value={formData.university} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-transparent rounded-xl focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 outline-none text-white transition-all duration-300" />
                 </div>
               </div>
             </div>

@@ -6,12 +6,9 @@ import { SettingsView } from './SettingsView';
 import { AnalysisView } from './AnalysisView';
 import { TransactionsView } from './TransactionsView';
 import { HomeView } from './HomeView';  
-import { Bell, User, Settings, ArrowRight, Loader2, Menu } from 'lucide-react';
+import { Settings, ArrowRight, Loader2, Menu } from 'lucide-react';
 import { SavingView } from './SavingsView';
 import { AssesorView } from './AssesorView';
-
-// Importamos los mocks solo para la simulación temporal
-import { MOCK_TRANSACTIONS, MOCK_USER_PROFILE } from './MockData';
 
 export const MainApp = () => {
   // =====================================================================
@@ -19,7 +16,7 @@ export const MainApp = () => {
   // =====================================================================
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showUserMenu, setShowUserMenu] = useState(false); 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Estado para el menú móvil
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   
   // Estados para datos del Backend
   const [isLoading, setIsLoading] = useState(true);
@@ -33,32 +30,79 @@ export const MainApp = () => {
   const userMenuRef = useRef(null);
 
   // =====================================================================
-  // 3. CONEXIÓN CON EL BACKEND (Carga inicial de datos)
+  // 3. CONEXIÓN CON EL BACKEND (Carga y Recarga de datos)
   // =====================================================================
-  useEffect(() => {
-    // TODO: BACKEND - Aquí se deben cargar el perfil del usuario y sus transacciones.
-    /* Ejemplo de implementación real usando axios o fetch:
-    Promise.all([
-      fetch('/api/user/profile').then(res => res.json()),
-      fetch('/api/transactions').then(res => res.json())
-    ])
-    .then(([userData, txData]) => {
-      setUserProfile(userData);
-      setTransactions(txData);
-      setIsLoading(false);
-    })
-    .catch(error => {
-      console.error("Error al cargar datos del backend:", error);
-      setIsLoading(false);
-    });
-    */
+  const cargarDatos = async () => {
+    try {
+      // Solo mostramos la pantalla de carga completa si es la primera vez
+      if (transactions.length === 0) setIsLoading(true);
+      
+      const options = { method: 'GET', credentials: 'include' };
+      
+      const [perfilRes, billsRes, incomesRes] = await Promise.all([
+        fetch('http://localhost:8000/user/profile', options),
+        fetch('http://localhost:8000/bill/', options),
+        fetch('http://localhost:8000/income/', options)
+      ]);
 
-    // Simulación temporal (MOCK) para que el frontend siga siendo funcional
-    setTimeout(() => {
-      setUserProfile(MOCK_USER_PROFILE);
-      setTransactions(MOCK_TRANSACTIONS);
+      if (!perfilRes.ok) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const perfilData = await perfilRes.json();
+      
+      setUserProfile({
+        firstname: perfilData.firstname || '',
+        lastname: perfilData.lastname || '',
+        email: perfilData.email || '',
+        university: perfilData.university || 'Sin institución', 
+        avatarUrl: perfilData.avatarUrl || ''
+      });
+
+      let dbTransactions = [];
+
+      // Procesamos los Gastos (Bills) e inyectamos el 'type' de forma implícita
+      if (billsRes.ok) {
+        const billsData = await billsRes.json();
+        dbTransactions = dbTransactions.concat(
+          billsData.map(b => ({
+            id: b.bill_id || b.id || b._id,
+            date: b.date || new Date().toISOString(), 
+            category: b.category || 'Otros',
+            description: b.title || b.description,
+            amount: parseFloat(b.amount) || 0,
+            type: 'expense'
+          }))
+        );
+      }
+
+      // Procesamos los Ingresos (Incomes)
+      if (incomesRes.ok) {
+        const incomesData = await incomesRes.json();
+        dbTransactions = dbTransactions.concat(
+          incomesData.map(i => ({
+            id: i.income_id || i.id || i._id,
+            date: i.date || new Date().toISOString(), 
+            category: i.origin || 'Otros',
+            description: i.title || i.description,
+            amount: parseFloat(i.amount) || 0,
+            type: 'income'
+          }))
+        );
+      }
+
+      setTransactions(dbTransactions);
+
+    } catch (error) {
+      console.error("Error al conectar con el servidor de Capital Joven:", error);
+    } finally {
       setIsLoading(false);
-    }, 1200); // 1.2 segundos de carga simulada
+    }
+  };
+
+  useEffect(() => {
+    cargarDatos();
   }, []);
 
   // =====================================================================
@@ -82,7 +126,6 @@ export const MainApp = () => {
 
     let ctx = gsap.context(() => {
       const tl = gsap.timeline();
-      // Usamos clearProps: "transform" para evitar conflictos visuales con los elementos fixed en móviles
       tl.from(".gsap-sidebar", { x: -100, opacity: 0, duration: 0.7, ease: "power3.out", clearProps: "transform" })
         .from(".gsap-header", { y: -30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "transform" }, "-=0.5")
         .from(".gsap-content", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out", clearProps: "transform" }, "-=0.4");
@@ -91,22 +134,13 @@ export const MainApp = () => {
     return () => ctx.revert(); 
   }, [isLoading]);
 
-  const handleAddTransaction = (newTx) => {
-    // TODO: BACKEND - Reemplazar por un POST a la base de datos si deciden no hacerlo directamente en TransactionsView.
-    if (Array.isArray(newTx)) {
-      const newTransactions = newTx.map(tx => ({
-        ...tx,
-        id: Math.random().toString(36).substr(2, 9),
-      }));
-      setTransactions(prev => [...newTransactions, ...prev]);
-    } else {
-      const transaction = { ...newTx, id: Math.random().toString(36).substr(2, 9) };
-      setTransactions(prev => [transaction, ...prev]);
-    }
-  };
+  // Sincronización activa con la Base de Datos en lugar de mutación local
+  const handleAddTransaction = () => cargarDatos();
+  const handleUpdateTransaction = () => cargarDatos();
+  const handleDeleteTransaction = () => cargarDatos();
 
   const showUserInfo = () => setShowUserMenu(!showUserMenu);
-
+  
   // =====================================================================
   // 5. PANTALLA DE CARGA (Loading Screen)
   // =====================================================================
@@ -125,7 +159,6 @@ export const MainApp = () => {
   return (
     <div ref={appRef} className="flex h-screen bg-darkbg font-sans text-white overflow-hidden">
       
-      {/* Pasamos los estados de apertura al SideBar */}
       <div className="gsap-sidebar h-full shrink-0 z-50">
         <SideBar 
           activeTab={activeTab} 
@@ -140,7 +173,6 @@ export const MainApp = () => {
         <header className="gsap-header bg-darkbg/80 backdrop-blur-md border-b border-white/5 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-40">
           
           <div className="flex items-center gap-4">
-            {/* Botón de Hamburguesa solo visible en móviles */}
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
               className="md:hidden p-2 -ml-2 text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer"
@@ -150,29 +182,23 @@ export const MainApp = () => {
             
             <div>
               <h2 className="text-xl md:text-2xl font-[Satoshi-Bold] text-white">
-                {activeTab === 'dashboard' && 'Resumen Financiero'}
-                {activeTab === 'tips' && 'Educación Financiera'}
-                {activeTab === 'settings' && 'Configuración'}
-                {activeTab === 'analysis' && 'Análisis Financiero'}
-                {activeTab === 'transactions' && 'Ingresos y Egresos'}
-                {activeTab === 'goals' && 'Ahorros y Metas'}
-                {activeTab === 'aiAssesor' && 'Asesor IA'}
+                {activeTab === 'dashboard' && 'Tu Resumen Financiero'}
+                {activeTab === 'tips' && 'Tips para tu Economía'}
+                {activeTab === 'settings' && 'Configuración de Perfil'}
+                {activeTab === 'analysis' && 'Tu Análisis Financiero'}
+                {activeTab === 'transactions' && 'Tus Ingresos y Egresos'}
+                {activeTab === 'goals' && 'Tus Ahorros y Metas'}
+                {activeTab === 'aiAssesor' && 'Tu Asesor IA'}
               </h2>
-              {/* Ocultamos el subtítulo en móviles para ahorrar espacio en la barra superior */}
               <p className="text-gray-400 text-sm mt-1 hidden md:block">Panel de Control</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
-            <button className="relative p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-            </button>
             
             <div className="relative" ref={userMenuRef}>
               <div onClick={showUserInfo} className="w-10 h-10 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-600/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300">
-                {/* Fallback inicial de avatar en el botón */}
-                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstName[0]}{userProfile.lastName[0]}</span>
+                <span className="font-[Satoshi-Bold] text-sm">{userProfile.firstname?.[0] || ''}{userProfile.lastname?.[0] || ''}</span>
               </div>
 
               {showUserMenu && (
@@ -183,31 +209,24 @@ export const MainApp = () => {
                       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
                       
                       <div className="relative mb-4">
-                        <div className="w-20 h-20 rounded-full bg-emerald-950/50 border-2 border-emerald-500/30 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                          {/* TODO: BACKEND - Usar userProfile.avatarUrl */}
-                          <img 
-                            src={userProfile.avatarUrl || "/avatar-placeholder.png"} 
-                            alt="Foto de perfil" 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement.innerHTML = `<span class="text-emerald-400 text-2xl font-[Satoshi-Bold]">${userProfile.firstName[0]}${userProfile.lastName[0]}</span>`;
-                            }}
-                          />
+                        <div className="w-20 h-20 rounded-full bg-emerald-950/50 border-2 border-emerald-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                          <span className="text-emerald-400 text-3xl font-[Satoshi-Bold] uppercase tracking-wider">
+                            {userProfile.firstname?.charAt(0) || ''}
+                            {userProfile.lastname?.charAt(0) || ''}
+                          </span>
                         </div>
                         <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-4 border-[#101010] rounded-full"></div>
                       </div>
 
                       <div className="text-center relative z-10">
-                        {/* INYECCIÓN DE DATOS DEL ESTADO */}
                         <p className="font-[Satoshi-Bold] text-white text-xl leading-tight">
-                          {userProfile.firstName} {userProfile.lastName}
+                          {userProfile.firstname} {userProfile.lastname}
                         </p>
                         <p className="text-gray-500 text-sm mt-1">{userProfile.email}</p>
                         
                         <div className="mt-4 px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl">
                           <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest">
-                            {userProfile.school}
+                            {userProfile.university}
                           </p>
                         </div>
                       </div>
@@ -236,21 +255,26 @@ export const MainApp = () => {
           </div>
         </header>
 
-        {/* Espaciado ajustado para móviles */}
         <main className="gsap-content flex-1 overflow-y-auto p-4 md:p-8 scrollbar-hide">
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'dashboard' && (
               <div className="animate-in fade-in duration-500">
-                <HomeView />
+                <HomeView setActiveTab={setActiveTab} />
               </div>
             )}
             {activeTab === 'tips' && <TipsView />}
             
-            {/* Ahora le pasamos el userProfile real a SettingsView para que lo editen */}
-            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} />}
+            {activeTab === 'settings' && <SettingsView initialUserData={userProfile} onProfileUpdate={setUserProfile} />}
             
             {activeTab === 'analysis' && <AnalysisView transactions={transactions}/>}
-            {activeTab === 'transactions' && <TransactionsView transactions={transactions} onAddTransaction={handleAddTransaction}/>}
+            {activeTab === 'transactions' && (
+              <TransactionsView 
+                transactions={transactions} 
+                onAddTransaction={handleAddTransaction}
+                onUpdateTransaction={handleUpdateTransaction}
+                onDeleteTransaction={handleDeleteTransaction}
+              />
+            )}
             {activeTab === 'goals' && <SavingView />}
             {activeTab === 'aiAssesor' && <AssesorView />}
           </div>

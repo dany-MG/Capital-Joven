@@ -20,19 +20,17 @@ export const TipsView = () => {
   
   const [newExpenseName, setNewExpenseName] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
+  const [savedBudget, setBudget] = useState(null); // Para almacenar el presupuesto guardado (si se implementa la parte de GET)
 
   // =====================================================================
   // 2. OBTENCIÓN DE DATOS PREVIOS (GET - Opcional)
   // =====================================================================
   useEffect(() => {
-    // TODO: BACKEND - (Opcional) Traer el ingreso mensual del perfil del usuario para auto-llenar la calculadora.
-    /* Ejemplo:
-    fetch('/api/user/profile')
-      .then(res => res.json())
-      .then(data => {
-        if(data.incomeAmount) setIncome(data.incomeAmount);
-      });
-    */
+    const savedBudget = localStorage.getItem('emergencyFundBudget');
+    if(savedBudget) {
+      setBudget(Number(savedBudget));
+      setTempBudget(Number(savedBudget));
+    }
   }, []);
 
   // =====================================================================
@@ -74,34 +72,58 @@ export const TipsView = () => {
     const displayStartDate = format(today, 'dd/MM/yyyy');
     const displayEndDate = format(addMonths(today, months), 'dd/MM/yyyy');
 
-    // TODO: BACKEND - Petición POST para crear una nueva "Meta de Ahorro" con fechas dinámicas
-    /* Ejemplo real:
-    try {
-      const response = await fetch('/api/savings/goals', {
+    try{
+      const resp = await fetch('http://localhost:8000/goal/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        credentials: 'include',
+        body : JSON.stringify({
           title: 'Fondo de Emergencia',
-          description: `Fondo de seguridad para cubrir ${months} meses de gastos básicos.`,
-          targetAmount: idealFund,
-          currentAmount: 0,
-          startDate: dbStartDate, // Inyectamos la fecha calculada
-          endDate: dbEndDate      // Inyectamos el límite de 3 o 6 meses
+          description: `Ahorrar $${idealFund.toLocaleString('es-MX')} para cubrir ${months} meses de gastos esenciales.`,
+          target_amount: idealFund,
+          current_amount: 0,
+          start_date: dbStartDate,
+          end_date: dbEndDate,
         })
-      });
+      })
+      if(!resp.ok){
+        const errData = await resp.json();
+        throw new Error(errData.detail || "Error al guardar la meta");
+      }
 
-      if (!response.ok) throw new Error("Error al guardar la meta");
-      
-      // Mostrar éxito y cerrar
-    } catch (error) {
-      console.error(error);
+      setShowCalculator(false); // Cerramos la calculadora tras guardar
+
+      Swal.fire({
+        title: '¡Meta Establecida!',
+          html: `
+            Tu fondo de emergencia de <b>$${idealFund.toLocaleString('es-MX')}</b> ha sido guardado en tus Metas de Ahorro.
+            <br/><br/>
+            <div style="font-size: 0.9em; text-align: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px;">
+              <b>Inicio:</b> ${displayStartDate}<br/>
+              <b>Objetivo final:</b> ${displayEndDate}
+            </div>
+            <br/>
+            ¡Poco a poco llegarás al objetivo!
+          `,
+          icon: 'success',
+          background: '#101010',
+          color: '#ffffff', 
+          confirmButtonColor: '#10b981', 
+          confirmButtonText: '¡A ahorrar!',
+          backdrop: `rgba(0,0,0,0.6)`, 
+          customClass: {
+            popup: 'border border-white/10 rounded-3xl shadow-2xl',
+            confirmButton: 'px-8 py-3 rounded-full font-bold text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300 hover:scale-105',
+          }
+      })
+    }catch(err) {
+      // console.log(err);
       Swal.fire('Error', 'No se pudo guardar la meta en este momento.', 'error');
-    } finally {
+    }finally{
       setIsSavingGoal(false);
     }
-    */
 
-    // Simulación Frontend
+    /* Simulación Frontend
     setTimeout(() => {
       setIsSavingGoal(false);
       setShowCalculator(false); // Cerramos la calculadora tras guardar
@@ -129,7 +151,7 @@ export const TipsView = () => {
             confirmButton: 'px-8 py-3 rounded-full font-bold text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300 hover:scale-105',
           }
       });
-    }, 1000);
+    }, 1000);*/
   };
 
   // =====================================================================
@@ -170,7 +192,7 @@ export const TipsView = () => {
             
             <button 
               onClick={() => setShowCalculator(!showCalculator)}
-              className="bg-white/5 border border-white/10 hover:bg-emerald-500 hover:border-emerald-400 text-white hover:text-darkbg font-bold py-3.5 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transform hover:-translate-y-1 cursor-pointer">
+              className="bg-white/5 border border-white/10 hover:bg-emerald-500 hover:border-emerald-400 text-white hover:text-black font-bold py-3.5 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transform hover:-translate-y-1 cursor-pointer">
               {showCalculator ? 'Ocultar Calculadora' : 'Calcular mi Fondo Ideal'}
             </button>
           </div>
@@ -186,7 +208,7 @@ export const TipsView = () => {
                 <div className="shrink-0 w-8 h-8 rounded-full bg-emerald-500 text-darkbg font-bold flex items-center justify-center">1</div>
                 <div>
                   <h4 className="font-bold text-white">Fondo Inicial ($1,000)</h4>
-                  <p className="text-sm text-gray-400">Tu primer objetivo. Suficiente para cubrir reparaciones menores sin endeudarte.</p>
+                  <p className="text-md text-gray-400">Tu primer objetivo. Suficiente para cubrir reparaciones menores sin endeudarte.</p>
                 </div>
               </div>
               <div className="w-0.5 h-6 bg-white/10 ml-4"></div>
@@ -194,7 +216,7 @@ export const TipsView = () => {
                 <div className="shrink-0 w-8 h-8 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 font-bold flex items-center justify-center">2</div>
                 <div>
                   <h4 className="font-bold text-white">3 Meses de Gastos</h4>
-                  <p className="text-sm text-gray-400">Cubre tus necesidades básicas (renta, comida, servicios) por un trimestre.</p>
+                  <p className="text-md text-gray-400">Cubre tus necesidades básicas (renta, comida, servicios) por un trimestre.</p>
                 </div>
               </div>
             </div>
@@ -289,12 +311,12 @@ export const TipsView = () => {
                     </span>
                   </div>
                 )}
-
+                
                 <div className="mb-4">
                   <label className="text-gray-300 text-sm block mb-3">¿Cuántos meses de seguridad quieres?</label>
                   <div className="flex gap-2 bg-white/5 p-1 rounded-xl w-max">
-                    <button onClick={() => setMonths(3)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 3 ? 'bg-emerald-500 text-darkbg' : 'text-gray-400 hover:text-white'}`}>3 Meses</button>
-                    <button onClick={() => setMonths(6)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 6 ? 'bg-emerald-500 text-darkbg' : 'text-gray-400 hover:text-white'}`}>6 Meses</button>
+                    <button onClick={() => setMonths(3)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 3 ? 'bg-emerald-500 text-black' : 'text-gray-400 hover:text-white'}`}>3 Meses</button>
+                    <button onClick={() => setMonths(6)} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${months === 6 ? 'bg-emerald-500 text-black' : 'text-gray-400 hover:text-white'}`}>6 Meses</button>
                   </div>
                 </div>
 
@@ -303,12 +325,11 @@ export const TipsView = () => {
                   <span className="text-4xl font-[Satoshi-Bold] text-white">${idealFund.toLocaleString('es-MX')}</span>
                 </div>
               </div>
-
               {/* Botón con Estado de Carga */}
               <button 
                 onClick={handleSetGoal} 
                 disabled={idealFund === 0 || isSavingGoal} 
-                className="w-full mt-6 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-darkbg font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full mt-6 bg-emerald-500 text-black hover:bg-emerald-400 disabled:bg-emerald-500/50 disabled:cursor-not-allowed font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSavingGoal ? <Loader2 size={18} className="animate-spin" /> : <Target size={18} />}
                 {isSavingGoal ? 'Guardando Meta...' : 'Establecer como Meta de Ahorro'}
@@ -334,7 +355,7 @@ export const TipsView = () => {
                 </div>
                 <div>
                   <h4 className="text-lg font-[Satoshi-Bold] text-white mb-2">{tip.title}</h4>
-                  <p className="text-gray-400 text-sm leading-relaxed">
+                  <p className="text-gray-400 text-md leading-relaxed">
                     {tip.description}
                   </p>
                 </div>

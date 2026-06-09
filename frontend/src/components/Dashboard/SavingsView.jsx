@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Calendar, Plus, Loader2, Check, X, Info, ChevronRight, TrendingUp, Trash2 } from 'lucide-react';
+import { Target, Calendar, Plus, Loader2, Check, X, Info, ChevronRight, TrendingUp, Trash2, Edit2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export const SavingView = () => {
   // =====================================================================
-  // 1. ESTADOS (Multimetas)
+  // 1. ESTADOS
   // =====================================================================
   const [isLoading, setIsLoading] = useState(true);
   const [goals, setGoals] = useState([]); 
   const [showForm, setShowForm] = useState(false); 
+  const [editGoalId, setEditGoalId] = useState(null); // NUEVO: Rastrea si estamos editando
   
-  const [newGoal, setNewGoal] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     targetAmount: '',
@@ -18,70 +19,129 @@ export const SavingView = () => {
     endDate: ''
   });
 
+  // URL Base de tu API
+  const API_BASE_URL = 'http://localhost:8000/goal';
+
+  // Configuración por defecto para fetch con manejo de Cookies (Sesión)
+  const fetchOptions = (method, body = null) => {
+    const options = {
+      method: method,
+      headers: {},
+      credentials: 'include' 
+    };
+    if (body) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    return options;
+  };
+
   // =====================================================================
   // 2. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
-  useEffect(() => {
-    // TODO: BACKEND - GET de todas las metas del usuario
-    /* fetch('/api/savings/goals')
-      .then(res => res.json())
-      .then(data => {
-        setGoals(data);
-        setIsLoading(false);
-      });
-    */
+  const fetchGoals = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`${API_BASE_URL}/`, fetchOptions('GET'));
+      
+      if (res.status === 404) {
+        setGoals([]);
+        return;
+      }
+      
+      if (!res.ok) throw new Error('Error al obtener las metas');
+      
+      const data = await res.json();
+      
+      const mappedGoals = data.map(g => ({
+        id: g.id,
+        title: g.title,
+        description: g.description,
+        targetAmount: g.target_amount,
+        currentAmount: g.current_amount,
+        startDate: g.start_date ? g.start_date.split('T')[0] : '',
+        endDate: g.end_date ? g.end_date.split('T')[0] : ''
+      }));
 
-    // Simulación temporal
-    setTimeout(() => {
-      setGoals([
-        {
-          id: 1,
-          title: "Fondo de Emergencia",
-          description: "Reservado para imprevistos médicos.",
-          targetAmount: 5000,
-          currentAmount: 5000, // <--- Simulamos esta como completada para que veas el efecto
-          startDate: "2024-01-01",
-          endDate: "2024-06-30"
-        },
-        {
-          id: 2,
-          title: "Laptop Nueva",
-          description: "Ahorro para renovación de equipo.",
-          targetAmount: 15000,
-          currentAmount: 1500,
-          startDate: "2024-02-15",
-          endDate: "2024-12-20"
-        }
-      ]);
+      setGoals(mappedGoals);
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', 'No se pudieron cargar tus metas', 'error');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    fetchGoals();
   }, []);
 
   // =====================================================================
   // 3. LÓGICA DE ACCIONES (POST / PUT / DELETE)
   // =====================================================================
 
-  // CREAR META (POST)
-  const handleCreateGoal = (e) => {
+  // CREAR O ACTUALIZAR META (POST / PUT)
+  const handleSaveGoal = async (e) => {
     e.preventDefault();
-    
-    const goalToSave = {
-      ...newGoal,
-      id: Date.now(),
-      currentAmount: 0,
-      targetAmount: Number(newGoal.targetAmount)
+  
+    // Buscamos la meta actual si estamos editando para no perder su progreso (current_amount)
+    const existingGoal = editGoalId ? goals.find(g => g.id === editGoalId) : null;
+
+    const backendGoalData = {
+      title: formData.title,
+      description: formData.description,
+      target_amount: Number(formData.targetAmount),
+      current_amount: existingGoal ? existingGoal.currentAmount : 0, 
+      start_date: formData.startDate ? new Date(formData.startDate).toISOString() : null,
+      end_date: formData.endDate ? new Date(formData.endDate).toISOString() : null
     };
 
-    // TODO: BACKEND - POST a /api/savings/goals
-    setGoals([...goals, goalToSave]);
-    setShowForm(false);
-    setNewGoal({ title: '', description: '', targetAmount: '', startDate: '', endDate: '' });
+    try {
+      let res;
+      if (editGoalId) {
+        // MODO EDICIÓN: PUT al backend
+        // TODO: BACKEND - Verifica si tu ruta es /update/, /edit/ o similar en FastAPI
+        res = await fetch(`${API_BASE_URL}/update/${editGoalId}`, fetchOptions('PUT', backendGoalData));
+      } else {
+        // MODO CREACIÓN: POST al backend
+        res = await fetch(`${API_BASE_URL}/register`, fetchOptions('POST', backendGoalData));
+      }
+      
+      if (!res.ok) throw new Error(editGoalId ? 'No se pudo actualizar la meta' : 'No se pudo registrar la meta');
+      
+      await fetchGoals();
+      resetForm();
 
-    Swal.fire({
-      toast: true, position: 'bottom-end', icon: 'success',
-      title: 'Meta creada exitosamente', showConfirmButton: false, timer: 3000,
-      background: '#101010', color: '#10b981'
+      Swal.fire({
+        toast: true, position: 'bottom-end', icon: 'success',
+        title: editGoalId ? 'Meta actualizada exitosamente' : 'Meta creada exitosamente', 
+        showConfirmButton: false, timer: 3000,
+        background: '#101010', color: '#10b981'
+      });
+    } catch (error) {
+      Swal.fire('Error', error.message, 'error');
+    }
+  };
+
+  // PREPARAR FORMULARIO PARA EDICIÓN
+  const handleEditClick = (goal) => {
+    setFormData({
+      title: goal.title,
+      description: goal.description,
+      targetAmount: goal.targetAmount,
+      startDate: goal.startDate,
+      endDate: goal.endDate
     });
+    setEditGoalId(goal.id);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // LIMPIAR FORMULARIO
+  const resetForm = () => {
+    setShowForm(false);
+    setEditGoalId(null);
+    setFormData({ title: '', description: '', targetAmount: '', startDate: '', endDate: '' });
   };
 
   // ABONAR A META (PUT)
@@ -99,19 +159,27 @@ export const SavingView = () => {
 
     if (amount) {
       const numericAmount = Number(amount);
+      const backendAmountData = { amount: numericAmount };
 
-      // TODO: BACKEND - PUT/POST a /api/savings/goals/${goalId}/add-funds
-      setGoals(prevGoals => prevGoals.map(goal => 
-        goal.id === goalId 
-          ? { ...goal, currentAmount: goal.currentAmount + numericAmount } 
-          : goal
-      ));
+      try {
+        const res = await fetch(`${API_BASE_URL}/add/${goalId}`, fetchOptions('PUT', backendAmountData));
+        
+        if (!res.ok) throw new Error('No se pudo añadir el monto');
 
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success',
-        title: `Abono de $${numericAmount} registrado`,
-        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-      });
+        setGoals(prevGoals => prevGoals.map(goal => 
+          goal.id === goalId 
+            ? { ...goal, currentAmount: goal.currentAmount + numericAmount } 
+            : goal
+        ));
+
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success',
+          title: `Abono de $${numericAmount} registrado`,
+          showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+        });
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo registrar el abono', 'error');
+      }
     }
   };
 
@@ -131,24 +199,21 @@ export const SavingView = () => {
     });
 
     if (result.isConfirmed) {
-      // TODO: BACKEND - DELETE a /api/savings/goals/${goalId}
-      /* Ejemplo de implementación real:
       try {
-        const response = await fetch(`/api/savings/goals/${goalId}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error("Fallo al eliminar");
+        const res = await fetch(`${API_BASE_URL}/delete/${goalId}`, fetchOptions('DELETE'));
+        
+        if (!res.ok) throw new Error("Fallo al eliminar");
+        
+        setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
+
+        Swal.fire({
+          toast: true, position: 'bottom-end', icon: 'success',
+          title: 'Meta eliminada correctamente',
+          showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
+        });
       } catch (error) {
-        return Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
+        Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
       }
-      */
-
-      // Actualización de UI Frontend
-      setGoals(prevGoals => prevGoals.filter(goal => goal.id !== goalId));
-
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success',
-        title: 'Meta eliminada correctamente',
-        showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
-      });
     }
   };
 
@@ -156,6 +221,7 @@ export const SavingView = () => {
   // 4. CÁLCULOS AUXILIARES
   // =====================================================================
   const calculateProgress = (current, target) => {
+    if (!target || target <= 0) return "0.0";
     return Math.min((current / target) * 100, 100).toFixed(1);
   };
 
@@ -182,7 +248,7 @@ export const SavingView = () => {
         </div>
         
         <button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={showForm ? resetForm : () => setShowForm(true)}
           className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-lg cursor-pointer ${
             showForm ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-emerald-500 text-black hover:bg-emerald-400'
           }`}
@@ -191,17 +257,19 @@ export const SavingView = () => {
         </button>
       </div>
 
-      {/* FORMULARIO DE NUEVA META (Condicional) */}
+      {/* FORMULARIO DE NUEVA / EDITAR META */}
       {showForm && (
         <div className="bg-darkpanel border border-emerald-500/30 rounded-3xl p-8 shadow-2xl animate-in slide-in-from-top-4 duration-300">
-          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">Configurar Nueva Meta</h3>
-          <form onSubmit={handleCreateGoal} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <h3 className="text-xl font-[Satoshi-Bold] text-white mb-6">
+            {editGoalId ? 'Editar Meta Existente' : 'Configurar Nueva Meta'}
+          </h3>
+          <form onSubmit={handleSaveGoal} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Nombre de la Meta</label>
                 <input 
                   required type="text" placeholder="Ej. Viaje a la playa" 
-                  value={newGoal.title} onChange={e => setNewGoal({...newGoal, title: e.target.value})}
+                  value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50"
                 />
               </div>
@@ -209,7 +277,7 @@ export const SavingView = () => {
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Descripción</label>
                 <textarea 
                   placeholder="¿Para qué es este ahorro?" 
-                  value={newGoal.description} onChange={e => setNewGoal({...newGoal, description: e.target.value})}
+                  value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 h-24 resize-none"
                 />
               </div>
@@ -219,7 +287,7 @@ export const SavingView = () => {
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Monto Objetivo ($)</label>
                 <input 
                   required type="number" placeholder="0.00" 
-                  value={newGoal.targetAmount} onChange={e => setNewGoal({...newGoal, targetAmount: e.target.value})}
+                  value={formData.targetAmount} onChange={e => setFormData({...formData, targetAmount: e.target.value})}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50"
                 />
               </div>
@@ -228,7 +296,7 @@ export const SavingView = () => {
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Inicio</label>
                   <input 
                     required type="date" 
-                    value={newGoal.startDate} onChange={e => setNewGoal({...newGoal, startDate: e.target.value})}
+                    value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none focus:border-emerald-500/50 scheme-dark"
                   />
                 </div>
@@ -236,13 +304,13 @@ export const SavingView = () => {
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-2">Fin Esperado</label>
                   <input 
                     required type="date" 
-                    value={newGoal.endDate} onChange={e => setNewGoal({...newGoal, endDate: e.target.value})}
+                    value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 outline-none focus:border-emerald-500/50 scheme-dark"
                   />
                 </div>
               </div>
               <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3.5 rounded-xl transition-all mt-4">
-                Guardar Meta
+                {editGoalId ? 'Actualizar Meta' : 'Guardar Meta'}
               </button>
             </div>
           </form>
@@ -268,7 +336,6 @@ export const SavingView = () => {
                 const isCompleted = goal.currentAmount >= goal.targetAmount;
 
                 return (
-                  // Si está completada, añadimos un fondo verde sutil, si no, el hover normal
                   <tr key={goal.id} className={`transition-colors group ${isCompleted ? 'bg-emerald-500/10 ' : 'hover:bg-white/2'}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 mb-1">
@@ -308,6 +375,7 @@ export const SavingView = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center items-center gap-2">
+                        {/* Botón Añadir Fondos */}
                         <button 
                           onClick={() => handleAddFunds(goal.id)}
                           disabled={isCompleted}
@@ -321,7 +389,16 @@ export const SavingView = () => {
                           {isCompleted ? <Check size={18} /> : <Plus size={18} />}
                         </button>
                         
-                        {/* Botón para eliminar meta con el evento onClick conectado */}
+                        {/* Botón Editar Meta */}
+                        <button 
+                          onClick={() => handleEditClick(goal)}
+                          className="p-2.5 rounded-xl border border-white/10 text-gray-500 hover:text-cyan-400 hover:border-cyan-500/30 hover:bg-cyan-500/10 transition-all cursor-pointer"
+                          title="Editar meta"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+
+                        {/* Botón Eliminar Meta */}
                         <button 
                           onClick={() => handleDeleteGoal(goal.id)}
                           className="p-2.5 rounded-xl border border-white/10 text-gray-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all cursor-pointer"
