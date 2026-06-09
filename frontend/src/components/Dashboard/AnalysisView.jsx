@@ -25,17 +25,7 @@ export const AnalysisView = ({ transactions = [] }) => {
   // 3. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
   useEffect(() => {
-      // TODO: BACKEND - Hacer fetch a la BD para traer el límite mensual del usuario
-      /* Ejemplo real:
-      fetch('/api/user/settings/budget')
-        .then(res => res.json())
-        .then(data => {
-            setBudget(data.monthlyLimit);
-            setTempBudget(data.monthlyLimit);
-            setIsLoadingBudget(false);
-        })
-        .catch(err => console.error("Error cargando el presupuesto:", err));
-      */
+     
 
       // Simulación temporal para el Frontend
       setTimeout(() => {

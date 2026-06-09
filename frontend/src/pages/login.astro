@@ -18,7 +18,7 @@ import AuthInput from '../elements/AuthInput.astro';
       <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white">
         Bienvenido de <span class="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400 font-[Satoshi-Bold]">vuelta</span>
       </h1>
-      <p class="text-gray-400 text-md mt-2">
+      <p class="text-gray-400 text-sm mt-2">
         Ingresa a tu cuenta y sigue al control de tus finanzas
       </p>
     </div>
@@ -53,7 +53,7 @@ import AuthInput from '../elements/AuthInput.astro';
       </div>
 
       <!-- Recordarme + olvidé contraseña -->
-      <div class="auth-item flex items-center justify-between text-md">
+      <div class="auth-item flex items-center justify-between text-sm">
         <label class="flex items-center gap-2 text-gray-400 cursor-pointer select-none">
           <input type="checkbox" name="remember" class="w-4 h-4 rounded border-white/20 bg-zinc-900/50 accent-emerald-500"/>
           <span>Recordarme</span>
@@ -62,13 +62,13 @@ import AuthInput from '../elements/AuthInput.astro';
       </div>
 
       <!-- Mensaje global de error -->
-      <p id="form-error" class="auth-item text-md text-red-400 text-center hidden"></p>
+      <p id="form-error" class="auth-item text-sm text-red-400 text-center hidden"></p>
 
       <!-- Botón principal -->
       <button
         type="submit"
         id="submit-btn"
-        class="auth-item mt-2 w-full px-6 py-3.5 bg-emerald-400 hover:bg-emerald-500 text-black font-semibold rounded-full transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+        class="auth-item mt-2 w-full px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold rounded-full transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
         <span class="btn-text">Iniciar sesión</span>
         <span class="btn-loader hidden">
           <svg class="inline-block animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -80,7 +80,7 @@ import AuthInput from '../elements/AuthInput.astro';
     </form>
 
     <!-- Link a register -->
-    <p class="auth-item text-center text-md text-gray-400 mt-8">
+    <p class="auth-item text-center text-sm text-gray-400 mt-8">
       ¿Aún no tienes cuenta?
       <a href="/register" class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
         Regístrate
@@ -165,17 +165,19 @@ import AuthInput from '../elements/AuthInput.astro';
       submitBtn.querySelector('.btn-loader')?.classList.remove('hidden');
 
       try {
-        // TODO: reemplazar por tu endpoint real
-        // const res = await fetch('/api/auth/login', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ email, password }),
-        // });
-        // if (!res.ok) throw new Error('Credenciales inválidas');
-        // const { token } = await res.json();
-        // localStorage.setItem('cj_token', token);
-
-        await new Promise((r) => setTimeout(r, 900)); // simulación
+        const API_URL = "http://localhost:8000";
+        const response = await fetch(`${API_URL}/user/login`, {
+          method: "POST",
+          credentials: "include",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({email, password})
+        });
+        if(!response.ok)
+        {
+          const error = await response.json();
+          throw new Error(error.detail || "Error al iniciar sesión");
+        }
+        await response.json();
         window.location.href = '/dashboard';
       } catch (err) {
         formError.textContent = (err as Error).message || 'Ocurrió un error, intenta de nuevo';
