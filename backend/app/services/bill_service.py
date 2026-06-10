@@ -79,6 +79,16 @@ class BillService:
         bill = await self.db.bill.find_one({"_id": ObjectId(bill_id)})
         if not bill:
             raise ValueError("No se logró encontrar el gasto")
+        
+        if "goal_id" in bill and bill["goal_id"]:
+            try:
+                await self.db.goal.update_one(
+                    {"_id": ObjectId(bill["goal_id"])},
+                    {"$inc": {"current_amount": -bill["amount"]}}
+                )
+            except Exception as e:
+                print(f"Advertencia al actualizar la meta vinculada: {str(e)}")
+
         result = await self.db.bill.delete_one({"_id": ObjectId(bill_id)})
         if result.deleted_count == 0:
             raise ValueError("Ocurrió un error al eliminar los datos")

@@ -7,7 +7,15 @@ import remarkGfm from 'remark-gfm';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 
-export const AssesorView = () => {
+const getChatHistory = () =>{
+  if (typeof window !== 'undefined'){
+    const savedHistory = localStorage.getItem('capitalJoven_chat_history');
+    return savedHistory ? JSON.parse(savedHistory) : [];
+  }
+  return []
+}
+
+export const AssesorView = ({ userProfile, transactions = []}) => {
   const [inputValue, setInputValue] = useState('');
   const [cooldown, setCooldown] = useState(0); // <-- ESTADO PARA EL TEMPORIZADOR
   const scrollRef = useRef(null);
@@ -21,12 +29,27 @@ export const AssesorView = () => {
     return () => clearTimeout(timer);
   }, [cooldown]);
 
+  const budget = typeof window !== 'undefined' ? localStorage.getItem('capitaJoven_budget') || '0' : '0';
+  const recentTx = transactions.slice(0,10);
+
   const { 
     messages, 
     status, 
     setMessages,
-    sendMessage 
+    sendMessage,
+    input,
+    handleInputChange,
+    handleSubmit  
   } = useChat({
+    api: '/api/gemini', 
+    initialMessages: getChatHistory(), // ¡Ahora sí lo leerá al iniciar!
+    body : {
+      financialContext:{
+        firstname: userProfile?.firstname || 'Dany',
+        budget: budget,
+        transactions: recentTx
+      }
+    },
     transport : new DefaultChatTransport({
       api: '/api/gemini', 
     }), 
@@ -57,23 +80,29 @@ export const AssesorView = () => {
     }
   });
 
-  // Inyección garantizada del mensaje de bienvenida al cargar la página
+  // 1. CARGA INICIAL: Solo se ejecuta UNA VEZ al abrir el chat
   useEffect(() => {
-    if (messages.length === 0) {
+    const savedHistory = localStorage.getItem('capitalJoven_chat_history');
+    
+    if (savedHistory) {
+      // Si ya hay una conversación guardada, la restauramos
+      setMessages(JSON.parse(savedHistory));
+    } else {
+      // Si es la primera vez, iniciamos con el saludo
       setMessages([
         {
           id: 'welcome-msg-' + Date.now(),
           role: 'assistant',
-          parts: [
-            { 
-              type: 'text', 
-              text: '¡Hola Dany! Soy tu Asesor Inteligente de Capital Joven. He analizado tus últimos movimientos y tengo algunas sugerencias para optimizar tu presupuesto. ¿En qué puedo ayudarte hoy?' 
-            }
-          ]
+          content: `¡Hola ${userProfile?.firstname || 'Usuario'}! Soy tu Asesor Inteligente de Capital Joven. He analizado tus últimos movimientos y tengo algunas sugerencias para optimizar tu presupuesto. ¿En qué puedo ayudarte hoy?` 
         }
       ]);
     }
-  }, [messages.length, setMessages]);
+  }, [setMessages, userProfile?.firstname]); // Solo depende del montaje inicial
+
+  useEffect(() => { 
+    if(messages.length>0)
+      localStorage.setItem('capitalJoven_chat_history', JSON.stringify(messages));
+  }, [messages]);
 
   const getMessageText = (msg) => {
     if (msg.parts && msg.parts.length > 0) {
@@ -96,13 +125,18 @@ export const AssesorView = () => {
   };
 
   const resetChat = () => {
-    setMessages([
+    const nombreUsuario = userProfile?.firstname || 'undefined'
+    const mensajeBienvenida = [
       {
-        id: 'welcome-msg',
+        id: 'welcome-msg-' + Date.now(),
         role: 'assistant',
-        parts: [{ type: 'text', text: '¡Hola Dany! Soy tu Asesor Inteligente de Capital Joven. ¿En qué puedo ayudarte hoy?' }]
+        content: `¡Hola ${nombreUsuario}! Soy tu Asesor Inteligente de Capital Joven. ¿En qué puedo ayudarte hoy?`
       }
-    ]);
+    ];
+    
+    // Seteamos el estado y sobreescribimos el localStorage con el mensaje limpio
+    setMessages(mensajeBienvenida);
+    localStorage.setItem('capitalJoven_chat_history', JSON.stringify(mensajeBienvenida));
   };
 
   const downloadMarkdown = () => {
@@ -181,7 +215,7 @@ export const AssesorView = () => {
             <h2 className="text-white font-[Satoshi-Bold] text-xl">Asesor Financiero IA</h2>
             <div className="flex items-center gap-1.5 text-sm text-emerald-400 font-bold uppercase tracking-wider">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-              Conectado a Gemini ⚡
+              Conectado a Gemini 3.5 Flash
             </div>
           </div>
         </div>
