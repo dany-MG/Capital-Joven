@@ -340,7 +340,7 @@ export const MainApp = () => {
               />
             )}
             {activeTab === 'goals' && <SavingView onTransactionAdded={handleAddTransaction} />}
-            {activeTab === 'aiAssesor' && <AssesorView />}
+            {activeTab === 'aiAssesor' && <AssesorView userProfile={userProfile} transactions={transactions} />}
           </div>
         </main>
       </div>
