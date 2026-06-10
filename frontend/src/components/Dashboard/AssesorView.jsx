@@ -67,7 +67,7 @@ export const AssesorView = () => {
           parts: [
             { 
               type: 'text', 
-              text: '¡Hola Dany! Soy tu Asesor Inteligente de Capital Joven. He analizado tus últimos movimientos y tengo algunas sugerencias para optimizar tu presupuesto. ¿En qué puedo ayudarte hoy?' 
+              text: `¡Hola ${userProfile.firstname}! Soy tu Asesor Inteligente de Capital Joven. He analizado tus últimos movimientos y tengo algunas sugerencias para optimizar tu presupuesto. ¿En qué puedo ayudarte hoy?` 
             }
           ]
         }

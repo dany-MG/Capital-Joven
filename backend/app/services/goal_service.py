@@ -100,6 +100,18 @@ class GoalService:
             {"$inc": {"current_amount": amount}}
         )
 
+        bill_data = {
+            "title" : f"Abono a meta: {goal['title'][:15]}",
+            "amount": amount,
+            "date": datetime.now(timezone.utc),
+            "category": "inversiones",
+            "frequency": "unico",
+            "user_id": user_id,
+            "goal_id": str(goal["_id"])
+        }
+
+        await self.db.bill.insert_one(bill_data)
+
         updated = await self.db.goal.find_one({"_id": ObjectId(goal_id)})
         return build_goal_response(updated)
     

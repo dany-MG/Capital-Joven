@@ -50,13 +50,6 @@ export const AnalysisView = ({ transactions = [] }) => {
       
       // Lo guardamos en la memoria del navegador para que no se borre
       localStorage.setItem('capitalJoven_budget', newBudget.toString());
-      
-      // (Opcional) Podemos lanzar una alerta sutil
-      Swal.fire({
-        toast: true, position: 'bottom-end', icon: 'success',
-        title: 'Presupuesto actualizado', showConfirmButton: false, timer: 2000,
-        background: '#101010', color: '#10b981'
-      });
 
     } else {
       setTempBudget(budget); // Restaurar si es inválido (ej. si lo dejaron en 0)

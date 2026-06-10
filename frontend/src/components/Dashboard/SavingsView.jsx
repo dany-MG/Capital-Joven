@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Target, Calendar, Plus, Loader2, Check, X, Info, ChevronRight, TrendingUp, Trash2, Edit2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-export const SavingView = () => {
+export const SavingView = ({onTransactionAdded}) => {
   // =====================================================================
   // 1. ESTADOS
   // =====================================================================
@@ -172,13 +172,17 @@ export const SavingView = () => {
             : goal
         ));
 
+        if (onTransactionAdded) {
+          onTransactionAdded();
+        }
+
         Swal.fire({
           toast: true, position: 'bottom-end', icon: 'success',
           title: `Abono de $${numericAmount} registrado`,
           showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
         });
       } catch (error) {
-        Swal.fire('Error', 'No se pudo registrar el abono', 'error');
+        Swal.fire({title: 'Error', text: `No se pudo registrar el abono: ${error.message}`, icon: 'error'});
       }
     }
   };
@@ -212,7 +216,7 @@ export const SavingView = () => {
           showConfirmButton: false, timer: 3000, background: '#101010', color: '#10b981'
         });
       } catch (error) {
-        Swal.fire('Error', 'No se pudo eliminar la meta', 'error');
+        Swal.fire({title: 'Error', text: `No se pudo eliminar la meta: ${error.message}`, icon: 'error'});
       }
     }
   };

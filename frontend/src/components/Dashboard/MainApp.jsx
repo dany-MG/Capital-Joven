@@ -17,6 +17,10 @@ export const MainApp = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showUserMenu, setShowUserMenu] = useState(false); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
+
+  const [showOnBoarding, setShowOnboarding] = useState(false); // Para mostrar el onboarding solo la primera vez
+  const [onboardData, setOnboardData] = useState({source: 'Nomina', 'amount':0})
+  const  [isOnboardingSubmit, setIsOnboardingSubmit] = useState(false);
   
   // Estados para datos del Backend
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +98,11 @@ export const MainApp = () => {
 
       setTransactions(dbTransactions);
 
+      const hasOnBoard = localStorage.getItem(`onboarded_${perfilData.email}`)
+      if (dbTransactions.length === 0 && !hasOnBoard){
+        setShowOnboarding(true);
+      }
+
     } catch (error) {
       console.error("Error al conectar con el servidor de Capital Joven:", error);
     } finally {
@@ -104,6 +113,61 @@ export const MainApp = () => {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  // =====================================================================
+  // FUNCIÓN DE ONBOARDING
+  // =====================================================================
+  const handleOnboardingSubmit = async (e) => {
+    e.preventDefault();
+    if (!onboardData.amount) return;
+    setIsOnboardingSubmit(true);
+
+    const amount = parseFloat(onboardData.amount);
+
+    // 1. Guardamos el presupuesto en el navegador (Para que AnalysisView lo lea)
+    localStorage.setItem('capitalJoven_budget', amount.toString());
+    
+    // 2. Marcamos que este usuario ya hizo el onboarding para que no le vuelva a salir
+    localStorage.setItem(`onboarded_${userProfile.email}`, 'true');
+
+    // 3. Preparamos el primer ingreso para el backend
+    const backendPayload = {
+      title: 'Saldo Inicial',
+      amount: amount,
+      description: 'Mi primer registro en Capital Joven',
+      date: new Date().toISOString(),
+      frequency: "Único",
+      origin: onboardData.source
+    };
+
+    try {
+      const response = await fetch('http://localhost:8000/income/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(backendPayload)
+      });
+
+      if (!response.ok) throw new Error('Error al registrar el saldo inicial');
+
+      // Cerramos el modal, recargamos los datos y damos la bienvenida
+      setShowOnboarding(false);
+      cargarDatos(); 
+
+      Swal.fire({
+        title: '¡Todo listo!',
+        text: 'Tu perfil está configurado. ¡Bienvenido a Capital Joven!',
+        icon: 'success',
+        background: '#101010', color: '#ffffff', confirmButtonColor: '#10b981'
+      });
+
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', 'No se pudo guardar la configuración inicial.', 'error');
+    } finally {
+      setIsOnboardingSubmit(false);
+    }
+  };
 
   // =====================================================================
   // 4. LÓGICA DE INTERFAZ Y EVENTOS
@@ -275,12 +339,80 @@ export const MainApp = () => {
                 onDeleteTransaction={handleDeleteTransaction}
               />
             )}
-            {activeTab === 'goals' && <SavingView />}
+            {activeTab === 'goals' && <SavingView onTransactionAdded={handleAddTransaction} />}
             {activeTab === 'aiAssesor' && <AssesorView />}
           </div>
         </main>
       </div>
+
+      {/* ===================================================================== */}
+      {/* MODAL DE BIENVENIDA (ONBOARDING) */}
+      {/* ===================================================================== */}
+      {showOnBoarding && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-500">
+          <div className="bg-darkpanel bg-zinc-900/90 rounded-3xl shadow-2xl border border-emerald-500/30 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-500">
+            
+            <div className="p-8 text-center relative overflow-hidden">
+               <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl"></div>
+               <div className="w-20 h-20 flex items-center justify-center mx-auto mb-4]">
+                  <span className="text-4xl font-[Satoshi-Bold] text-emerald-400"><img src="/logo.png" alt="Logo" /></span>
+               </div>
+               <h2 className="text-2xl font-[Satoshi-Bold] text-white">¡Hola, {userProfile?.firstname}!</h2>
+               <p className="text-gray-400 mt-2">Para darte la mejor experiencia, configuremos tu punto de partida.</p>
+            </div>
+
+            <form onSubmit={handleOnboardingSubmit} className="p-8 pt-0 space-y-6">
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Tu principal fuente de ingresos</label>
+                  <select
+                    value={onboardData.source}
+                    onChange={(e) => setOnboardData({...onboardData, source: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl bg-darkbg border border-white/10 focus:border-emerald-500/50 outline-none text-white"
+                  >
+                    <option value="Nomina" className='bg-zinc-900'>Salario / Nómina</option>
+                    <option value="Beca" className='bg-zinc-900'>Beca Estudiantil</option>
+                    <option value="Ventas" className='bg-zinc-900'>Freelance / Proyectos</option>
+                    <option value="Otros" className='bg-zinc-900'>Apoyo familiar / Otros</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Monto mensual aproximado ($)</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={onboardData.amount}
+                    onChange={(e) => setOnboardData({...onboardData, amount: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl bg-darkbg border border-white/10 focus:border-emerald-500/50 outline-none text-white text-lg font-[Satoshi-Bold]"
+                    placeholder="Ej. 3000"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex gap-3 text-sm text-emerald-400/90 leading-relaxed">
+                <span className="shrink-0">💡</span>
+                <p>
+                  Usaremos este monto como tu <b>Presupuesto Mensual Inicial</b> para tus gráficas de análisis. No te preocupes, <b>podrás modificarlo más adelante</b> en la pestaña de Análisis.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isOnboardingSubmit || !onboardData.amount}
+                className="w-full flex justify-center items-center gap-2 font-bold py-3.5 px-4 rounded-xl bg-emerald-500 text-black hover:bg-emerald-400 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isOnboardingSubmit ? <Loader2 size={20} className="animate-spin" /> : null}
+                {isOnboardingSubmit ? 'Configurando...' : 'Comenzar mi aventura'}
+              </button>
+            </form>
+
+          </div>
+        </div>
+      )}
     </div>
+    
   );
 };
 
