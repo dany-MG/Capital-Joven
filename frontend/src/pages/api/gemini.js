@@ -114,7 +114,7 @@ export const POST = async ({ request, clientAddress }) => {
 
         // Mantenemos el AWAIT porque de lo contrario se envía una promesa vacía
         const result = await streamText({
-            model: google('gemini-3.5-flash'),
+            model: google('gemini-2.5-flash'),
             system: systemPrompt,
             messages: coreMessages,
             temperature: 0.6,

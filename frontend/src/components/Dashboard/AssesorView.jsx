@@ -7,20 +7,15 @@ import remarkGfm from 'remark-gfm';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 
-const getChatHistory = () =>{
-  if (typeof window !== 'undefined'){
-    const savedHistory = localStorage.getItem('capitalJoven_chat_history');
-    return savedHistory ? JSON.parse(savedHistory) : [];
-  }
-  return []
-}
-
-export const AssesorView = ({ userProfile, transactions = []}) => {
+export const AssesorView = ({ userProfile, transactions = [] }) => {
   const [inputValue, setInputValue] = useState('');
-  const [cooldown, setCooldown] = useState(0); // <-- ESTADO PARA EL TEMPORIZADOR
+  const [cooldown, setCooldown] = useState(0); 
   const scrollRef = useRef(null);
 
-  // EL RELOJ DE ARENA: Descuenta 1 segundo automáticamente
+  // Recuperamos el presupuesto actual guardado y limitamos transacciones
+  const budget = typeof window !== 'undefined' ? localStorage.getItem('capitalJoven_budget') || '0' : '0';
+  const recentTx = transactions.slice(0, 10);
+
   useEffect(() => {
     let timer;
     if (cooldown > 0) {
@@ -29,46 +24,30 @@ export const AssesorView = ({ userProfile, transactions = []}) => {
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  const budget = typeof window !== 'undefined' ? localStorage.getItem('capitaJoven_budget') || '0' : '0';
-  const recentTx = transactions.slice(0,10);
-
+  // CONFIGURACIÓN DEL HOOK CON TRANSPORT (SDK V5/V6)
   const { 
     messages, 
     status, 
     setMessages,
-    sendMessage,
-    input,
-    handleInputChange,
-    handleSubmit  
+    sendMessage 
   } = useChat({
-    api: '/api/gemini', 
-    initialMessages: getChatHistory(), // ¡Ahora sí lo leerá al iniciar!
-    body : {
-      financialContext:{
-        firstname: userProfile?.firstname || 'Dany',
-        budget: budget,
-        transactions: recentTx
-      }
-    },
     transport : new DefaultChatTransport({
       api: '/api/gemini', 
     }), 
     onError: (error) => {
-      // Vercel intercepta el error. Intentamos leer el JSON que nos mandó el backend
       try {
         const parsedError = JSON.parse(error.message);
         if (parsedError.error === 'RATE_LIMIT') {
-          setCooldown(parsedError.retryAfter || 60); // Activamos el reloj con los segundos exactos
+          setCooldown(parsedError.retryAfter || 60);
           Swal.fire({
             toast: true, position: 'bottom-end', icon: 'warning',
             title: 'Límite alcanzado',
             text: `Espera ${parsedError.retryAfter} segundos antes de seguir.`,
             color: '#ffffff', showConfirmButton: false, timer: 3000, background: '#101010'
           });
-          return; // Detenemos la ejecución aquí
+          return;
         }
       } catch (e) {
-        // Fallback por si la IA sufre otro tipo de error
         console.error("Error no parseable:", e);
       }
 
@@ -80,29 +59,44 @@ export const AssesorView = ({ userProfile, transactions = []}) => {
     }
   });
 
-  // 1. CARGA INICIAL: Solo se ejecuta UNA VEZ al abrir el chat
+  // =====================================================================
+  // LA MAGIA DE LA PERSISTENCIA
+  // =====================================================================
+  const chatStorageKey = userProfile?.email ? `capitalJoven_chat_history_${userProfile.email}` : null;
   useEffect(() => {
-    const savedHistory = localStorage.getItem('capitalJoven_chat_history');
+    if (!chatStorageKey) return;
+
+    const savedHistory = localStorage.getItem(chatStorageKey);
     
     if (savedHistory) {
-      // Si ya hay una conversación guardada, la restauramos
       setMessages(JSON.parse(savedHistory));
     } else {
-      // Si es la primera vez, iniciamos con el saludo
       setMessages([
         {
           id: 'welcome-msg-' + Date.now(),
           role: 'assistant',
-          content: `¡Hola ${userProfile?.firstname || 'Usuario'}! Soy tu Asesor Inteligente de Capital Joven. He analizado tus últimos movimientos y tengo algunas sugerencias para optimizar tu presupuesto. ¿En qué puedo ayudarte hoy?` 
+          parts: [
+            { 
+              type: 'text', 
+              text: `¡Hola ${userProfile?.firstname || 'Usuario'}! Soy tu Asesor Inteligente de Capital Joven. He analizado tus últimos movimientos y tengo algunas sugerencias para optimizar tu presupuesto. ¿En qué puedo ayudarte hoy?` 
+            }
+          ]
         }
       ]);
     }
-  }, [setMessages, userProfile?.firstname]); // Solo depende del montaje inicial
+  }, [setMessages, chatStorageKey, userProfile?.firstname]);
 
   useEffect(() => { 
-    if(messages.length>0)
-      localStorage.setItem('capitalJoven_chat_history', JSON.stringify(messages));
-  }, [messages]);
+    if (messages.length > 0 && chatStorageKey) {
+      localStorage.setItem(chatStorageKey, JSON.stringify(messages));
+    }
+  }, [messages, chatStorageKey]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, status]);
 
   const getMessageText = (msg) => {
     if (msg.parts && msg.parts.length > 0) {
@@ -111,32 +105,47 @@ export const AssesorView = ({ userProfile, transactions = []}) => {
     return msg.text || msg.content || '';
   };
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, status]);
-
-  const handleFormSubmit = (e) => {
+  // =====================================================================
+  // ENVÍO EN TIEMPO REAL CON CONTEXTO (SDK 6)
+  // =====================================================================
+  const handleFormSubmit = async (e) => {
     e.preventDefault(); 
     if (!inputValue.trim() || cooldown > 0) return;
-    sendMessage({ text: inputValue });
-    setInputValue('');
+    
+    const userMessage = inputValue;
+    setInputValue(''); 
+
+    // 🟢 ENVIAMOS EL MENSAJE JUNTO CON EL CONTEXTO FINANCIERO DINÁMICO
+    await sendMessage(
+      { text: userMessage },
+      {
+        body: {
+          financialContext: {
+            firstname: userProfile?.firstname || 'Usuario',
+            budget: budget,
+            transactions: recentTx
+          }
+        }
+      }
+    );
   };
 
+  // =====================================================================
+  // UTILIDADES DEL CHAT
+  // =====================================================================
   const resetChat = () => {
-    const nombreUsuario = userProfile?.firstname || 'undefined'
+    const nombreUsuario = userProfile?.firstname || 'Usuario';
     const mensajeBienvenida = [
       {
         id: 'welcome-msg-' + Date.now(),
         role: 'assistant',
-        content: `¡Hola ${nombreUsuario}! Soy tu Asesor Inteligente de Capital Joven. ¿En qué puedo ayudarte hoy?`
+        parts: [{ type: 'text', text: `¡Hola ${nombreUsuario}! Soy tu Asesor Inteligente de Capital Joven. ¿En qué puedo ayudarte hoy?` }]
       }
     ];
-    
-    // Seteamos el estado y sobreescribimos el localStorage con el mensaje limpio
     setMessages(mensajeBienvenida);
-    localStorage.setItem('capitalJoven_chat_history', JSON.stringify(mensajeBienvenida));
+    if (chatStorageKey) {
+      localStorage.setItem(chatStorageKey, JSON.stringify(mensajeBienvenida));
+    }
   };
 
   const downloadMarkdown = () => {
@@ -215,7 +224,7 @@ export const AssesorView = ({ userProfile, transactions = []}) => {
             <h2 className="text-white font-[Satoshi-Bold] text-xl">Asesor Financiero IA</h2>
             <div className="flex items-center gap-1.5 text-sm text-emerald-400 font-bold uppercase tracking-wider">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-              Conectado a Gemini 3.5 Flash
+              Conectado a Gemini 2.5 Flash
             </div>
           </div>
         </div>
@@ -277,7 +286,7 @@ export const AssesorView = ({ userProfile, transactions = []}) => {
             <button 
               key={i}
               onClick={() => setInputValue(s)}
-              disabled={cooldown > 0} // Desactiva sugerencias durante el cooldown
+              disabled={cooldown > 0}
               className="whitespace-nowrap px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[13px] text-gray-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {s}
@@ -290,13 +299,12 @@ export const AssesorView = ({ userProfile, transactions = []}) => {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            disabled={cooldown > 0} // Deshabilita el input visualmente
+            disabled={cooldown > 0}
             placeholder={cooldown > 0 ? `Espera ${cooldown} segundos para enviar otro mensaje...` : "Hazle una pregunta a tu Asesor IA..."}
             className="w-full bg-black/40 border border-white/10 rounded-2xl pl-5 pr-14 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-500/50 focus:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all disabled:opacity-50"
           />
           <button 
             type="submit"
-            // LA CORRECCIÓN CLAVE DEL BUG: Ahora permitimos clics si está 'ready' O 'error', solo bloqueamos al enviar o en cooldown.
             disabled={!inputValue.trim() || status === 'submitted' || status === 'streaming' || cooldown > 0}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[linear-gradient(to_right,#34d399,#22d3ee)] rounded-xl flex items-center justify-center text-black hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:hover:scale-100 cursor-pointer"
           >
