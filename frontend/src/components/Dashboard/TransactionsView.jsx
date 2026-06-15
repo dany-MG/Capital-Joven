@@ -89,6 +89,21 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
     const currentTime = format(new Date(), 'HH:mm:ss');
     const baseDate = new Date(`${newTransaction.date}T${currentTime}`);
     const amount = parseFloat(newTransaction.amount);
+
+    if(isNaN(amount) || amount <= 0) {
+      Swal.fire({
+        position: 'center',
+        icon: 'error',
+        title: 'Monto inválido',
+        text: 'Por favor, ingresa una cantidad mayor a 0.',
+        showConfirmButton: false,
+        timer: 3000,
+        background: '#101010',
+        color: '#ffffff'
+      });
+      setIsSubmitting(false);
+      return
+    }
     
     const isincome = newTransaction.type === 'income';
     let endpoint = '';

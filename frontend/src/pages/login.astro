@@ -156,6 +156,11 @@ import AuthInput from '../elements/AuthInput.astro';
         showFieldError(passwordInput, 'Ingresa tu contraseña');
         valid = false;
       }
+      // Solo validamos longitud mínima aquí, el backend se encargará de validar el resto
+      if(password.length < 8) {
+        showFieldError(passwordInput, 'La contraseña que registraste debe tener al menos 8 caracteres');
+        valid = false;
+      }
 
       if (!valid) return;
 
