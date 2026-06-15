@@ -83,6 +83,22 @@ export const SavingView = ({onTransactionAdded}) => {
   // CREAR O ACTUALIZAR META (POST / PUT)
   const handleSaveGoal = async (e) => {
     e.preventDefault();
+
+    const amountTarget = Number(formData.targetAmount)
+
+    if(isNaN(amountTarget) || amountTarget <= 0) {
+          Swal.fire({
+            position: 'center',
+            icon: 'error',
+            title: 'Monto inválido',
+            text: 'Por favor, ingresa una cantidad mayor a 0.',
+            showConfirmButton: false,
+            timer: 3000,
+            background: '#101010',
+            color: '#ffffff'
+          });
+          return
+        }
   
     // Buscamos la meta actual si estamos editando para no perder su progreso (current_amount)
     const existingGoal = editGoalId ? goals.find(g => g.id === editGoalId) : null;
@@ -94,7 +110,7 @@ export const SavingView = ({onTransactionAdded}) => {
       current_amount: existingGoal ? existingGoal.currentAmount : 0, 
       start_date: formData.startDate ? new Date(formData.startDate).toISOString() : null,
       end_date: formData.endDate ? new Date(formData.endDate).toISOString() : null
-    };
+    }
 
     try {
       let res;
@@ -161,6 +177,19 @@ export const SavingView = ({onTransactionAdded}) => {
       const numericAmount = Number(amount);
       const backendAmountData = { amount: numericAmount };
 
+      if(isNaN(amount) || amount <= 0) {
+          Swal.fire({
+            position: 'center',
+            icon: 'error',
+            title: 'Monto inválido',
+            text: 'Por favor, ingresa una cantidad mayor a 0.',
+            showConfirmButton: false,
+            timer: 3000,
+            background: '#101010',
+            color: '#ffffff'
+          })
+          return
+        }
       try {
         const res = await fetch(`${API_BASE_URL}/add/${goalId}`, fetchOptions('PUT', backendAmountData));
         

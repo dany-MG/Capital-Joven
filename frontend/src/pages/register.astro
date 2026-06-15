@@ -59,6 +59,7 @@ import AuthInput from '../elements/AuthInput.astro';
           label="Universidad"
           placeholder="Ej. IPN, UNAM, UAM..."
           icon="school"
+          required
         />
       </div>
 
@@ -254,13 +255,14 @@ import AuthInput from '../elements/AuthInput.astro';
       const firstnameInput = form.querySelector<HTMLInputElement>('#firstname')!;
       const lastnameInput = form.querySelector<HTMLInputElement>('#lastname')!;
       const emailInput = form.querySelector<HTMLInputElement>('#email')!;
+      const universityInput = form.querySelector<HTMLInputElement>('#university')!;
 
       if (firstname.length < 3) {
         showFieldError(firstnameInput, 'Ingresa tu nombre completo');
         valid = false;
       }
 
-      if (lastname.length < 3) {
+      if (lastname.length < 2) {
         showFieldError(lastnameInput, 'Ingresa tu apellido completo');
         valid = false;
       }
@@ -283,6 +285,11 @@ import AuthInput from '../elements/AuthInput.astro';
       if (!termsAccepted) {
         formError.textContent = 'Debes aceptar los términos y condiciones';
         formError.classList.remove('hidden');
+        valid = false;
+      }
+      
+      if(!university) {
+        showFieldError(universityInput, 'Ingresa tu universidad o institución educativa');
         valid = false;
       }
 
