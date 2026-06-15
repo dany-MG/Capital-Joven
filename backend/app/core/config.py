@@ -17,7 +17,7 @@ class Settings(BaseSettings):
         if self.ENVIROMENT == "production":
             return [""]
         else:
-            return ["http://localhost:4321", "http://127.0.0.1:4321", "http://localhost:3000", "http://127.0.0.1", "http://localhost:5173", ["https://capital-joven-lyhnazb2d-alejandro-manriques-projects.vercel.app/"]]
+            return ["http://localhost:4321", "http://127.0.0.1:4321", "http://localhost:3000", "http://127.0.0.1", "http://localhost:5173", ["https://capital-joven-git-backdev-alejandro-manriques-projects.vercel.app"]]
         
     class Config:
         env_file = ".env"
