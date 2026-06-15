@@ -30,7 +30,7 @@ async def login_user(user_data: UserLogin, request: Request, response: Response,
         if not result:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
         response.set_cookie(key="session_token", value=result.token, max_age=timedelta(days=7).total_seconds(),
-                            httponly=True, secure=False, samesite="lax", path="/")
+                            httponly=True, secure=True, samesite="none", path="/")
         return result
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ocurrio un error al iniciar sesión: {str(e)}")
