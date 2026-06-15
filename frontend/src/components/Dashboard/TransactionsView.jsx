@@ -110,12 +110,12 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
     let httpMethod = 'POST';
     if (isEditing) {
       endpoint = isincome
-        ? `http://localhost:8000/income/update/${editId}`
-        : `http://localhost:8000/bill/update/${editId}`;
+        ? `https://capital-joven.onrender.com/income/update/${editId}`
+        : `https://capital-joven.onrender.com/bill/update/${editId}`;
     } else {
       endpoint = isincome 
-        ? 'http://localhost:8000/income/register' 
-        : 'http://localhost:8000/bill/register';
+        ? 'https://capital-joven.onrender.com/income/register' 
+        : 'https://capital-joven.onrender.com/bill/register';
     }
     
     // payload mapeado
@@ -197,8 +197,8 @@ export const TransactionsView = ({ transactions = [], onAddTransaction, onUpdate
       // Determinamos ruta según el tipo unificado ('income' o 'expense')
       const isIncome = type === 'income';
       const deleteEndpoint = isIncome 
-        ? `http://localhost:8000/income/delete/${id}`
-        : `http://localhost:8000/bill/delete/${id}`;
+        ? `https://capital-joven.onrender.com/income/delete/${id}`
+        : `https://capital-joven.onrender.com/bill/delete/${id}`;
 
       try {
         const response = await fetch(deleteEndpoint, { 

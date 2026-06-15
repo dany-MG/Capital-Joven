@@ -20,7 +20,7 @@ export const SavingView = ({onTransactionAdded}) => {
   });
 
   // URL Base de tu API
-  const API_BASE_URL = 'http://localhost:8000/goal';
+  const API_BASE_URL = 'https://capital-joven.onrender.com/goal';
 
   // Configuración por defecto para fetch con manejo de Cookies (Sesión)
   const fetchOptions = (method, body = null) => {

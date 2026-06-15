@@ -73,7 +73,7 @@ export const TipsView = () => {
     const displayEndDate = format(addMonths(today, months), 'dd/MM/yyyy');
 
     try{
-      const resp = await fetch('http://localhost:8000/goal/register', {
+      const resp = await fetch('https://capital-joven.onrender.com/goal/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

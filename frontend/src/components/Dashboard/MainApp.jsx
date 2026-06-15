@@ -44,9 +44,9 @@ export const MainApp = () => {
       const options = { method: 'GET', credentials: 'include' };
       
       const [perfilRes, billsRes, incomesRes] = await Promise.all([
-        fetch('http://localhost:8000/user/profile', options),
-        fetch('http://localhost:8000/bill/', options),
-        fetch('http://localhost:8000/income/', options)
+        fetch('https://capital-joven.onrender.com/user/profile', options),
+        fetch('https://capital-joven.onrender.com/bill/', options),
+        fetch('https://capital-joven.onrender.com/income/', options)
       ]);
 
       if (!perfilRes.ok) {
@@ -141,7 +141,7 @@ export const MainApp = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/income/register', {
+      const response = await fetch('https://capital-joven.onrender.com/income/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

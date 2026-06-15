@@ -84,7 +84,7 @@ const bodyData = {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/user/update', {
+      const response = await fetch('https://capital-joven.onrender.com/user/update', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json'
@@ -162,7 +162,7 @@ const bodyData = {
 
   const handleLogout = async() => {
     try{
-      await fetch('http://localhost:8000/user/logout',{
+      await fetch('https://capital-joven.onrender.com/user/logout',{
         method: 'POST',
         credentials: 'include'
       });

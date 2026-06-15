@@ -300,7 +300,7 @@ import AuthInput from '../elements/AuthInput.astro';
       submitBtn.querySelector('.btn-loader')?.classList.remove('hidden');
 
       try {
-        const API_URL = "http://localhost:8000";
+        const API_URL = "https://capital-joven.onrender.com";
         const response = await fetch(`${API_URL}/user/register`, {
           method: "POST",
           headers: {"Content-Type": "application/json"},

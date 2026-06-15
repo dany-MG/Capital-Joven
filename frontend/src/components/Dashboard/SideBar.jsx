@@ -15,7 +15,7 @@ const menuItems = [
 export default function SideBar({ activeTab, setActiveTab, userProfile, isOpen, setIsOpen }){
     const handleLogout = async () => {
         try {
-            await fetch('http://localhost:8000/user/logout', { 
+            await fetch('https://capital-joven.onrender.com/user/logout', { 
                 method: 'POST',
                 credentials: 'include'
             });

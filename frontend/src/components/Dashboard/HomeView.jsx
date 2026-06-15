@@ -58,7 +58,7 @@ export const HomeView = ({ setActiveTab }) => {
   // 2. OBTENCIÓN DE DATOS (GET)
   // =====================================================================
   useEffect(() => {
-    const API_URL = "http://localhost:8000";
+    const API_URL = "https://capital-joven.onrender.com";
     Promise.all([
       fetch(`${API_URL}/dashboard/metrics`, {method: "GET", credentials: "include"}).then(res => {
         if(!res.ok) throw new Error("Error al cargar las métricas");
